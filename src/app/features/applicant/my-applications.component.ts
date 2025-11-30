@@ -1,17 +1,20 @@
-﻿import { Component, signal, inject } from '@angular/core';
+﻿import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StatusTagComponent } from '../../shared/components/status-tag.component';
+import { ApplicationsService } from '../../core/services/applications.service';
+import { AvailableJobsService } from '../../core/services/available-jobs.service';
 
 interface Application {
   id: number;
+  applicationId: number;
   jobTitle: string;
   company: string;
   location: string;
-  jobType: 'Full-time' | 'Part-time' | 'Contract' | 'Internship';
+  jobType: 'FullTime' | 'PartTime' | 'Internship' | 'FreeLance';
   appliedDate: string;
-  status: 'pending' | 'in-progress' | 'interview' | 'rejected' | 'accepted';
+  status: 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected';
   atsScore: number | null;
   examScore: number | null;
   examStatus: 'pending' | 'completed' | 'scheduled';
@@ -27,118 +30,57 @@ interface Application {
   templateUrl: './my-applications.component.html',
   styleUrls: ['./my-applications.component.css']
 })
-export class MyApplicationsComponent {
+export class MyApplicationsComponent implements OnInit {
   private router = inject(Router);
+  private applicationsService = inject(ApplicationsService);
+  private jobsService = inject(AvailableJobsService);
   
   filterStatus = 'all';
   filterJobType = 'all';
   searchQuery = '';
   expandedApp = signal<number | null>(null);
 
-  applications = signal<Application[]>([
-    {
-      id: 1,
-      jobTitle: 'Senior Frontend Developer',
-      company: 'TechCorp Solutions',
-      location: 'San Francisco, CA',
-      jobType: 'Full-time',
-      appliedDate: 'Nov 25, 2025',
-      status: 'interview',
-      atsScore: 92,
-      examScore: 88,
-      examStatus: 'completed',
-      interviewDate: 'Dec 5, 2025',
-      salary: '$120k - $150k',
-      description: 'We are looking for an experienced Frontend Developer to join our team. You will work on building scalable web applications using React and TypeScript.'
-    },
-    {
-      id: 2,
-      jobTitle: 'Full Stack Engineer',
-      company: 'InnovateLab',
-      location: 'Remote',
-      jobType: 'Full-time',
-      appliedDate: 'Nov 22, 2025',
-      status: 'in-progress',
-      atsScore: 85,
-      examScore: null,
-      examStatus: 'pending',
-      salary: '$100k - $130k',
-      description: 'Join our dynamic team to build cutting-edge web applications. Experience with Node.js, React, and MongoDB required.'
-    },
-    {
-      id: 1,
-      jobTitle: 'React Developer Intern',
-      company: 'StartupHub',
-      location: 'New York, NY',
-      jobType: 'Internship',
-      appliedDate: 'Nov 20, 2025',
-      status: 'accepted',
-      atsScore: 88,
-      examScore: 95,
-      examStatus: 'completed',
-      salary: '$25/hour',
-      description: 'Great opportunity for students to gain hands-on experience with React development in a fast-paced startup environment.'
-    },
-    {
-      id: 4,
-      jobTitle: 'UI/UX Developer',
-      company: 'DesignPro Agency',
-      location: 'Los Angeles, CA',
-      jobType: 'Contract',
-      appliedDate: 'Nov 18, 2025',
-      status: 'rejected',
-      atsScore: 65,
-      examScore: 72,
-      examStatus: 'completed',
-      salary: '$80k - $100k',
-      description: 'Looking for a creative developer with strong design skills to create beautiful and intuitive user interfaces.'
-    },
-    {
-      id: 5,
-      jobTitle: 'JavaScript Developer',
-      company: 'WebWorks Inc',
-      location: 'Austin, TX',
-      jobType: 'Full-time',
-      appliedDate: 'Nov 15, 2025',
-      status: 'pending',
-      atsScore: null,
-      examScore: null,
-      examStatus: 'pending',
-      salary: '$90k - $120k',
-      description: 'Seeking a skilled JavaScript developer to work on various client projects. Strong knowledge of ES6+ required.'
-    },
-    {
-      id: 6,
-      jobTitle: 'Frontend Developer',
-      company: 'CloudTech Systems',
-      location: 'Seattle, WA',
-      jobType: 'Full-time',
-      appliedDate: 'Nov 12, 2025',
-      status: 'in-progress',
-      atsScore: 78,
-      examScore: null,
-      examStatus: 'scheduled',
-      interviewDate: 'Dec 2, 2025',
-      salary: '$110k - $140k',
-      description: 'Work on cloud-based applications using modern JavaScript frameworks. Experience with AWS is a plus.'
-    },
-    {
-      id: 7,
-      jobTitle: 'Part-time Web Developer',
-      company: 'Local Business Solutions',
-      location: 'Boston, MA',
-      jobType: 'Part-time',
-      appliedDate: 'Nov 10, 2025',
-      status: 'pending',
-      atsScore: 82,
-      examScore: null,
-      examStatus: 'pending',
-      salary: '$45/hour',
-      description: 'Flexible part-time position helping local businesses build and maintain their web presence.'
-    }
-  ]);
+  applications = signal<Application[]>([]);
 
   filteredApplications = signal<Application[]>(this.applications());
+
+  ngOnInit(): void {
+    this.loadApplications();
+  }
+
+  loadApplications(): void {
+    // TODO: Replace with actual applicant ID from auth service
+    const applicantId = 2;
+    
+    this.applicationsService.getApplicationsList(applicantId).subscribe({
+      next: (response) => {
+        const mappedApplications: Application[] = response.map((app, index) => ({
+          id: index + 1,
+          applicationId: app.applicationId,
+          jobTitle: app.jobTitle,
+          company: app.companyName,
+          location: app.companyLocation,
+          jobType: 'FullTime', // Default since API doesn't provide this
+          appliedDate: new Date(app.appliedAt).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+          }),
+          status: app.applicationStatus as 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected',
+          atsScore: app.atsScore,
+          examScore: null, // Not provided by API
+          examStatus: 'pending', // Default since API doesn't provide this
+          description: '' // Not provided by API
+        }));
+        
+        this.applications.set(mappedApplications);
+        this.filteredApplications.set(mappedApplications);
+      },
+      error: (error) => {
+        console.error('Error loading applications:', error);
+      }
+    });
+  }
 
   applyFilters() {
     let filtered = this.applications();
@@ -174,20 +116,24 @@ export class MyApplicationsComponent {
   }
 
   getPendingCount(): number {
-    return this.applications().filter(app => app.status === 'pending').length;
+    return this.applications().filter(app => app.status === 'UnderReview' || app.status === 'ExamSent').length;
   }
 
   getInterviewCount(): number {
-    return this.applications().filter(app => app.status === 'interview').length;
+    return this.applications().filter(app => app.status === 'ATSPassed').length;
   }
 
   getAcceptedCount(): number {
-    return this.applications().filter(app => app.status === 'accepted').length;
+    return this.applications().filter(app => app.status === 'Completed').length;
   }
 
-  viewApplicationDetails(applicationId: number): void {
+  viewApplicationDetails(application: Application): void {
     // TODO: Replace with actual applicant ID from auth service
     const applicantId = 2;
-    this.router.navigate(['/applicant/applications', applicationId, applicantId]);
+    this.router.navigate(['/applicant/applications', application.applicationId, applicantId]);
+  }
+
+  getJobIcon(title: string): string {
+    return this.jobsService.getJobIcon(title);
   }
 }
