@@ -1,0 +1,357 @@
+<div class="jobs-page">
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="mb-1">Available Jobs</h2>
+        <p class="text-muted mb-0">
+          Showing {{ filteredJobs().length }} of {{ allJobs().length }} jobs
+        </p>
+      </div>
+      <div class="d-flex gap-2">
+        <button 
+          class="btn btn-icon"
+          [class.active]="viewMode() === 'grid'"
+          (click)="viewMode.set('grid')"
+          title="Grid View">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button 
+          class="btn btn-icon"
+          [class.active]="viewMode() === 'list'"
+          (click)="viewMode.set('list')"
+          title="List View">
+          <i class="bi bi-list-ul"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section mb-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="row g-3">
+          <!-- Search -->
+          <div class="col-md-12">
+            <div class="search-box">
+              <i class="bi bi-search"></i>
+              <input 
+                type="text"
+                class="form-control"
+                placeholder="Search by job title, company, or keywords..."
+                [value]="filters().searchQuery || ''"
+                (input)="updateFilter('searchQuery', $any($event.target).value)">
+              @if (filters().searchQuery) {
+                <button 
+                  class="btn-clear"
+                  (click)="updateFilter('searchQuery', '')">
+                  <i class="bi bi-x"></i>
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Filter Row -->
+          <div class="col-md-4">
+            <label class="form-label small text-muted">Experience Level</label>
+            <div class="dropdown custom-dropdown">
+              <button 
+                class="btn dropdown-toggle w-100 text-start" 
+                type="button" 
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside" 
+                aria-expanded="false">
+                <i class="bi bi-star me-2"></i>
+                {{ selectedExperienceLabel() }}
+              </button>
+              <ul class="dropdown-menu w-100">
+                <li>
+                  <a class="dropdown-item" 
+                     href="javascript:void(0)"
+                     [class.active]="!filters().experienceLevel"
+                     (click)="updateFilter('experienceLevel', '')">
+                    <i class="bi bi-check-circle me-2"></i>
+                    All Levels
+                  </a>
+                </li>
+                @for (level of experienceLevels; track level) {
+                  <li>
+                    <a class="dropdown-item" 
+                       href="javascript:void(0)"
+                       [class.active]="filters().experienceLevel === level"
+                       (click)="updateFilter('experienceLevel', level)">
+                      <i class="bi bi-check-circle me-2"></i>
+                      {{ getExperienceLevelDisplay(level) }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small text-muted">Employment Type</label>
+            <div class="dropdown custom-dropdown">
+              <button 
+                class="btn dropdown-toggle w-100 text-start" 
+                type="button" 
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside" 
+                aria-expanded="false">
+                <i class="bi bi-briefcase me-2"></i>
+                {{ selectedEmploymentLabel() }}
+              </button>
+              <ul class="dropdown-menu w-100">
+                <li>
+                  <a class="dropdown-item" 
+                     href="javascript:void(0)"
+                     [class.active]="!filters().employmentType"
+                     (click)="updateFilter('employmentType', '')">
+                    <i class="bi bi-check-circle me-2"></i>
+                    All Types
+                  </a>
+                </li>
+                @for (type of employmentTypes; track type) {
+                  <li>
+                    <a class="dropdown-item" 
+                       href="javascript:void(0)"
+                       [class.active]="filters().employmentType === type"
+                       (click)="updateFilter('employmentType', type)">
+                      <i class="bi bi-check-circle me-2"></i>
+                      {{ getEmploymentTypeDisplay(type) }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small text-muted">Location</label>
+            <div class="dropdown custom-dropdown">
+              <button 
+                class="btn dropdown-toggle w-100 text-start" 
+                type="button" 
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside" 
+                aria-expanded="false">
+                <i class="bi bi-geo-alt me-2"></i>
+                {{ selectedLocationLabel() }}
+              </button>
+              <ul class="dropdown-menu w-100">
+                <li>
+                  <a class="dropdown-item" 
+                     href="javascript:void(0)"
+                     [class.active]="!filters().location"
+                     (click)="updateFilter('location', '')">
+                    <i class="bi bi-check-circle me-2"></i>
+                    All Locations
+                  </a>
+                </li>
+                @for (location of locations(); track location) {
+                  <li>
+                    <a class="dropdown-item" 
+                       href="javascript:void(0)"
+                       [class.active]="filters().location === location"
+                       (click)="updateFilter('location', location)">
+                      <i class="bi bi-check-circle me-2"></i>
+                      {{ location }}
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        @if (hasActiveFilters()) {
+          <div class="mt-3">
+            <button 
+              class="btn btn-sm btn-outline-secondary"
+              (click)="clearFilters()">
+              <i class="bi bi-x-circle me-1"></i>
+              Clear All Filters
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-3 text-muted">Loading available jobs...</p>
+    </div>
+  }
+
+  <!-- Jobs Grid/List -->
+  @if (!loading()) {
+    @if (filteredJobs().length === 0) {
+      <div class="empty-state">
+        <div class="text-center py-5">
+          <i class="bi bi-briefcase display-1 text-muted mb-3"></i>
+          <h4>No Jobs Found</h4>
+          <p class="text-muted">
+            @if (hasActiveFilters()) {
+              Try adjusting your filters to see more results
+            } @else {
+              No jobs are currently available. Check back later!
+            }
+          </p>
+          @if (hasActiveFilters()) {
+            <button 
+              class="btn btn-primary mt-3"
+              (click)="clearFilters()">
+              Clear Filters
+            </button>
+          }
+        </div>
+      </div>
+    } @else {
+      <div [class]="viewMode() === 'grid' ? 'jobs-grid' : 'jobs-list'">
+        @for (job of paginatedJobs(); track job.id) {
+          <div 
+            class="job-card"
+            [class.list-view]="viewMode() === 'list'"
+            (click)="viewJobDetails(job.id)">
+            <div class="job-card-header">
+              
+              <div class="job-meta flex-grow-1">
+                <h5 class="job-title mb-1">
+                  <i [class]="'bi ' + getJobIcon(job.title) + ' me-2'"></i>
+                  {{ job.title }}
+                </h5>
+                <p class="company-name mb-2">
+                  <i class="bi bi-building-fill me-1"></i>
+                  {{ job.companyName }}
+                </p>
+              </div>
+              @if (job.applicationDeadline) {
+                <div class="deadline-badge" [class.urgent]="isDeadlineNear(job.applicationDeadline)">
+                  <i class="bi bi-clock me-1"></i>
+                  {{ formatDate(job.applicationDeadline) }}
+                </div>
+              }
+            </div>
+
+            <div class="job-card-body">
+              @if (job.description) {
+                <p class="job-description">{{ job.description }}</p>
+              }
+
+              <div class="job-details">
+                @if (job.location) {
+                  <span class="detail-badge">
+                    <i class="bi bi-geo-alt"></i>
+                    {{ job.location }}
+                  </span>
+                }
+                @if (job.employmentType) {
+                  <span class="detail-badge">
+                    <i class="bi bi-briefcase"></i>
+                    {{ getEmploymentTypeDisplay(job.employmentType) }}
+                  </span>
+                }
+                @if (job.experienceLevel) {
+                  <span class="detail-badge">
+                    <i class="bi bi-star"></i>
+                    {{ getExperienceLevelDisplay(job.experienceLevel) }}
+                  </span>
+                }
+                @if (job.salaryRange) {
+                  <span class="detail-badge salary">
+                    <i class="bi bi-currency-dollar"></i>
+                    {{ job.salaryRange }}
+                  </span>
+                }
+              </div>
+
+              @if (job.examDurationMinutes || job.numberOfQuestions) {
+                <div class="exam-info mt-3">
+                  @if (job.examDurationMinutes) {
+                    <span class="info-item">
+                      <i class="bi bi-alarm"></i>
+                      {{ job.examDurationMinutes }} min exam
+                    </span>
+                  }
+                  @if (job.numberOfQuestions) {
+                    <span class="info-item">
+                      <i class="bi bi-question-circle"></i>
+                      {{ job.numberOfQuestions }} questions
+                    </span>
+                  }
+                  @if (job.atsMinimumScore) {
+                    <span class="info-item">
+                      <i class="bi bi-trophy"></i>
+                      {{ job.atsMinimumScore }}% min score
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="job-card-footer">
+              <div class="posted-date">
+                <i class="bi bi-calendar3 me-1"></i>
+                Posted {{ job.createdAt | date:'MMM d, y' }}
+              </div>
+              <button 
+                class="btn btn-primary"
+                (click)="applyForJob(job.id, $event)">
+                <i class="bi bi-send me-1"></i>
+                Apply Now
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+      
+      <!-- Pagination -->
+      @if (filteredJobs().length > itemsPerPage) {
+        <div class="pagination-container mt-4">
+          <nav aria-label="Job listings pagination">
+            <ul class="pagination justify-content-center">
+              <!-- Previous Button -->
+              <li class="page-item" [class.disabled]="currentPage() === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="previousPage()" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              
+              <!-- Page Numbers -->
+              @for (pageNum of pageNumbers(); track pageNum; let i = $index) {
+                @if (i > 0 && pageNum > pageNumbers()[i - 1] + 1) {
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                }
+                <li class="page-item" [class.active]="currentPage() === pageNum">
+                  <a class="page-link" href="javascript:void(0)" (click)="goToPage(pageNum)">
+                    {{ pageNum }}
+                  </a>
+                </li>
+              }
+              
+              <!-- Next Button -->
+              <li class="page-item" [class.disabled]="currentPage() === totalPages()">
+                <a class="page-link" href="javascript:void(0)" (click)="nextPage()" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+          
+          <div class="text-center text-muted small mt-2">
+            Showing {{ (currentPage() - 1) * itemsPerPage + 1 }} - 
+            {{ Math.min(currentPage() * itemsPerPage, filteredJobs().length) }} 
+            of {{ filteredJobs().length }} jobs
+          </div>
+        </div>
+      }
+    }
+  }
+</div>

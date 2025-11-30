@@ -1,0 +1,233 @@
+<div class="application-details">
+  @if (isLoading()) {
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ error() }}
+      <button class="btn btn-sm btn-outline-danger ms-3" (click)="goBack()">
+        Go Back
+      </button>
+    </div>
+  } @else if (applicationDetails()) {
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <button class="btn btn-sm btn-ghost mb-2" (click)="goBack()">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Applications
+          </button>
+          <h1 class="page-title mb-2">{{ applicationDetails()!.jobTitle }}</h1>
+          <div class="d-flex align-items-center gap-3 text-muted">
+            <span>
+              <i class="bi bi-building me-1"></i>
+              {{ applicationDetails()!.companyName }}
+            </span>
+            <span>
+              <i class="bi bi-geo-alt me-1"></i>
+              {{ applicationDetails()!.companyLocation }}
+            </span>
+            <span>
+              <i class="bi bi-calendar me-1"></i>
+              Applied on {{ applicationDetails()!.createdAt | date: 'MMM dd, yyyy' }}
+            </span>
+          </div>
+        </div>
+        <app-status-tag [status]="getStatusClass(applicationDetails()!.applicationStatus)"></app-status-tag>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+      <!-- Left Column - Application Info -->
+      <div class="col-lg-8">
+        <!-- Application Status Card -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              Application Status
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="icon-wrapper me-3" style="background: var(--primary-light);">
+                    <i class="bi bi-check-circle text-primary"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Status</small>
+                    <strong>{{ getStatusText(applicationDetails()!.applicationStatus) }}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
+                  <div class="icon-wrapper me-3" style="background: var(--success-light);">
+                    <i class="bi bi-trophy text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">ATS Score</small>
+                    <strong>{{ applicationDetails()!.atsScore }}%</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <div class="icon-wrapper me-3" style="background: var(--warning-light);">
+                    <i class="bi bi-file-earmark-text text-warning"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Exam Status</small>
+                    <strong>{{ getExamStatusText(applicationDetails()!.examEvaluationStatus) }}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                  <div class="icon-wrapper me-3" [style.background]="applicationDetails()!.isPassed ? 'var(--success-light)' : 'var(--danger-light)'">
+                    <i class="bi" [class.bi-check-circle]="applicationDetails()!.isPassed" [class.bi-x-circle]="!applicationDetails()!.isPassed" [class.text-success]="applicationDetails()!.isPassed" [class.text-danger]="!applicationDetails()!.isPassed"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Result</small>
+                    <strong [class.text-success]="applicationDetails()!.isPassed" [class.text-danger]="!applicationDetails()!.isPassed">
+                      {{ applicationDetails()!.isPassed ? 'Passed' : 'Not Passed' }}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline Card -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-clock-history me-2"></i>
+              Application Timeline
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 0">
+                <div class="timeline-marker completed">
+                  <i class="bi bi-check"></i>
+                </div>
+                <div class="timeline-content">
+                  <h6>Application Submitted</h6>
+                  <small class="text-muted">{{ applicationDetails()!.createdAt | date: 'MMM dd, yyyy' }}</small>
+                </div>
+              </div>
+              
+              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 1" [class.active]="applicationDetails()!.applicationStatus === 1">
+                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 1" [class.active]="applicationDetails()!.applicationStatus === 1">
+                  @if (applicationDetails()!.applicationStatus >= 1) {
+                    <i class="bi bi-check"></i>
+                  }
+                </div>
+                <div class="timeline-content">
+                  <h6>ATS Screening</h6>
+                  <small class="text-muted">Score: {{ applicationDetails()!.atsScore }}%</small>
+                </div>
+              </div>
+              
+              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 2" [class.active]="applicationDetails()!.applicationStatus === 2">
+                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 2" [class.active]="applicationDetails()!.applicationStatus === 2">
+                  @if (applicationDetails()!.applicationStatus >= 2) {
+                    <i class="bi bi-check"></i>
+                  }
+                </div>
+                <div class="timeline-content">
+                  <h6>Technical Exam</h6>
+                  <small class="text-muted">{{ getExamStatusText(applicationDetails()!.examEvaluationStatus) }}</small>
+                </div>
+              </div>
+              
+              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 3" [class.active]="applicationDetails()!.applicationStatus === 3">
+                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 3" [class.active]="applicationDetails()!.applicationStatus === 3">
+                  @if (applicationDetails()!.applicationStatus >= 3) {
+                    <i class="bi bi-check"></i>
+                  }
+                </div>
+                <div class="timeline-content">
+                  <h6>Interview Round</h6>
+                  <small class="text-muted">{{ applicationDetails()!.applicationStatus >= 3 ? 'Scheduled' : 'Pending' }}</small>
+                </div>
+              </div>
+              
+              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 4">
+                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 4">
+                  @if (applicationDetails()!.applicationStatus >= 4) {
+                    <i class="bi bi-check"></i>
+                  }
+                </div>
+                <div class="timeline-content">
+                  <h6>Final Decision</h6>
+                  <small class="text-muted">{{ applicationDetails()!.applicationStatus >= 4 ? 'Completed' : 'Pending' }}</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Quick Stats -->
+      <div class="col-lg-4">
+        <!-- Competition Card -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-people me-2"></i>
+              Competition
+            </h5>
+          </div>
+          <div class="card-body text-center">
+            <div class="display-4 fw-bold text-primary mb-2">
+              {{ applicationDetails()!.numberOfApplicants }}
+            </div>
+            <p class="text-muted mb-0">Total Applicants</p>
+          </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-lightning me-2"></i>
+              Quick Actions
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              @if (applicationDetails()!.examEvaluationStatus === 0) {
+                <button class="btn btn-primary">
+                  <i class="bi bi-play-circle me-2"></i>
+                  Start Exam
+                </button>
+              }
+              <button class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-pdf me-2"></i>
+                View Job Description
+              </button>
+              <button class="btn btn-outline-secondary">
+                <i class="bi bi-chat-dots me-2"></i>
+                Contact HR
+              </button>
+              <button class="btn btn-outline-danger">
+                <i class="bi bi-x-circle me-2"></i>
+                Withdraw Application
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

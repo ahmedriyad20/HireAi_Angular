@@ -1,0 +1,26 @@
+.my-applications-page {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.application-card {
+  transition: all var(--transition-base);
+  border-left: 4px solid transparent;
+}
+
+.application-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-left-color: var(--primary-500);
+}
+
+.application-detail {
+  font-size: var(--text-sm);
+}
+
+.btn-link {
+  font-size: var(--text-sm);
+  color: var(--primary-500);
+}
+
+.btn-link:hover {
+  color: var(--primary-700);
+}

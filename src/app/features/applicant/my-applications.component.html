@@ -1,0 +1,258 @@
+<div class="my-applications-page">
+  <!-- Page Header -->
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+      <div>
+        <h1 class="page-title">My Applications</h1>
+        <p class="page-subtitle">Track and manage your job applications</p>
+      </div>
+      <button class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i>
+        Find Jobs
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon primary">
+              <i class="bi bi-briefcase"></i>
+            </div>
+            <div>
+              <div class="stat-value">{{ applications().length }}</div>
+              <div class="stat-label">Total Applications</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon warning">
+              <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div>
+              <div class="stat-value">{{ getPendingCount() }}</div>
+              <div class="stat-label">Pending</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon indigo">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div>
+              <div class="stat-value">{{ getInterviewCount() }}</div>
+              <div class="stat-label">Interviews</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon success">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div>
+              <div class="stat-value">{{ getAcceptedCount() }}</div>
+              <div class="stat-label">Accepted</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="filterStatus" (change)="applyFilters()">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in-progress">In Progress</option>
+            <option value="interview">Interview</option>
+            <option value="accepted">Accepted</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Job Type</label>
+          <select class="form-select" [(ngModel)]="filterJobType" (change)="applyFilters()">
+            <option value="all">All Types</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Internship">Internship</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Search</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search by company or position..."
+            [(ngModel)]="searchQuery"
+            (input)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-secondary w-100" (click)="resetFilters()">
+            <i class="bi bi-arrow-clockwise"></i>
+            Reset Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Applications List -->
+  <div class="row g-4">
+    @for (app of filteredApplications(); track app.id) {
+      <div class="col-12">
+        <div class="card application-card">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <!-- Job Info -->
+              <div class="col-md-4">
+                <h5 class="mb-1">{{ app.jobTitle }}</h5>
+                <p class="text-muted mb-1">
+                  <i class="bi bi-building"></i>
+                  {{ app.company }}
+                </p>
+                <p class="text-muted small mb-2">
+                  <i class="bi bi-geo-alt"></i>
+                  {{ app.location }}
+                  <span class="mx-2">•</span>
+                  <span class="badge badge-secondary">{{ app.jobType }}</span>
+                </p>
+                @if (app.salary) {
+                  <p class="text-primary small mb-0">
+                    <i class="bi bi-cash"></i>
+                    {{ app.salary }}
+                  </p>
+                }
+              </div>
+
+              <!-- Application Details -->
+              <div class="col-md-3">
+                <div class="application-detail">
+                  <small class="text-muted d-block mb-1">Applied Date</small>
+                  <span class="fw-medium">{{ app.appliedDate }}</span>
+                </div>
+                @if (app.interviewDate) {
+                  <div class="application-detail mt-2">
+                    <small class="text-muted d-block mb-1">Interview Date</small>
+                    <span class="fw-medium text-primary">{{ app.interviewDate }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Scores -->
+              <div class="col-md-2">
+                <div class="mb-2">
+                  <small class="text-muted d-block mb-1">ATS Score</small>
+                  @if (app.atsScore !== null) {
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="progress flex-grow-1" style="height: 8px;">
+                        <div 
+                          class="progress-bar" 
+                          [class.progress-bar]="app.atsScore >= 70"
+                          [class.bg-warning]="app.atsScore >= 50 && app.atsScore < 70"
+                          [class.bg-danger]="app.atsScore < 50"
+                          [style.width.%]="app.atsScore">
+                        </div>
+                      </div>
+                      <span class="small fw-semibold">{{ app.atsScore }}%</span>
+                    </div>
+                  } @else {
+                    <span class="badge badge-secondary">Pending</span>
+                  }
+                </div>
+                <div>
+                  <small class="text-muted d-block mb-1">Exam</small>
+                  @if (app.examStatus === 'completed' && app.examScore !== null) {
+                    <span class="badge badge-success">{{ app.examScore }}%</span>
+                  } @else if (app.examStatus === 'scheduled') {
+                    <span class="badge badge-warning">Scheduled</span>
+                  } @else {
+                    <span class="badge badge-secondary">Not Started</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Status & Actions -->
+              <div class="col-md-3">
+                <div class="d-flex flex-column gap-2 align-items-end">
+                  <app-status-tag [status]="app.status"></app-status-tag>
+                  
+                  @if (app.examStatus === 'pending') {
+                    <button class="btn btn-sm btn-primary">
+                      <i class="bi bi-play-circle"></i>
+                      Start Exam
+                    </button>
+                  } @else if (app.status === 'interview') {
+                    <button class="btn btn-sm btn-success">
+                      <i class="bi bi-calendar-event"></i>
+                      View Interview
+                    </button>
+                  } @else {
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewApplicationDetails(app.id)">
+                      <i class="bi bi-eye"></i>
+                      View Details
+                    </button>
+                  }
+                  
+                  <button class="btn btn-sm btn-ghost">
+                    <i class="bi bi-three-dots-vertical"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description (Collapsible) -->
+            @if (expandedApp() === app.id) {
+              <div class="mt-3 pt-3 border-top">
+                <h6 class="mb-2">Job Description</h6>
+                <p class="text-secondary small">{{ app.description }}</p>
+              </div>
+            }
+            
+            <button 
+              class="btn btn-sm btn-link text-decoration-none p-0 mt-2"
+              (click)="toggleExpand(app.id)">
+              {{ expandedApp() === app.id ? 'Show Less' : 'Show More' }}
+              <i class="bi" [class.bi-chevron-up]="expandedApp() === app.id" [class.bi-chevron-down]="expandedApp() !== app.id"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (filteredApplications().length === 0) {
+    <div class="text-center py-5">
+      <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+      <p class="text-muted mt-3">No applications found matching your filters.</p>
+      <button class="btn btn-primary mt-2">
+        <i class="bi bi-plus-circle"></i>
+        Browse Jobs
+      </button>
+    </div>
+  }
+</div>
