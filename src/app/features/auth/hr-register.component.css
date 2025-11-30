@@ -1,0 +1,7 @@
+/* Use the same styles as HR login */
+@import './hr-login.component.css';
+
+/* Optional: Different gradient for HR registration */
+.bg-gradient-hr {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}

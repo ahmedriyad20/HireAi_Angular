@@ -1,0 +1,264 @@
+<div class="auth-page">
+  <div class="container-fluid h-100">
+    <div class="row h-100">
+      <!-- Left Side - Branding -->
+      <div class="col-lg-6 d-none d-lg-flex auth-brand-side">
+        <div class="d-flex flex-column justify-content-center align-items-center text-white p-5">
+          <div class="mb-4">
+            <div class="logo-xl">
+              <i class="bi bi-person-plus"></i>
+            </div>
+          </div>
+          <h2 class="display-5 fw-bold mb-3">Join Our Community</h2>
+          <p class="lead text-center mb-4">
+            Start your journey to finding the perfect job with AI-powered tools
+          </p>
+          <div class="row g-3 w-100" style="max-width: 500px;">
+            <div class="col-6">
+              <div class="feature-box">
+                <i class="bi bi-trophy fs-3 mb-2"></i>
+                <h6>Mock Exams</h6>
+                <small>Practice before the real thing</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="feature-box">
+                <i class="bi bi-graph-up-arrow fs-3 mb-2"></i>
+                <h6>Track Progress</h6>
+                <small>See your improvement</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="feature-box">
+                <i class="bi bi-lightbulb fs-3 mb-2"></i>
+                <h6>AI Feedback</h6>
+                <small>Personalized insights</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="feature-box">
+                <i class="bi bi-briefcase fs-3 mb-2"></i>
+                <h6>Job Matching</h6>
+                <small>Find the perfect fit</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Registration Form -->
+      <div class="col-lg-6 d-flex align-items-center justify-content-center p-4">
+        <div class="auth-form-container animate-fade-in-up" style="max-width: 550px;">
+          <div class="text-center mb-4">
+            <div class="d-lg-none mb-3">
+              <div class="logo-md mx-auto">
+                <i class="bi bi-person-plus"></i>
+              </div>
+            </div>
+            <h3 class="fw-bold mb-2">Create Applicant Account</h3>
+            <p class="text-muted">Join us and start your job search journey</p>
+          </div>
+
+          @if (error()) {
+            <div class="alert alert-danger d-flex align-items-center" role="alert">
+              <i class="bi bi-exclamation-circle alert-icon"></i>
+              <div>{{ error() }}</div>
+            </div>
+          }
+
+          <form (ngSubmit)="handleRegister()" #registerForm="ngForm">
+            <!-- Name -->
+            <div class="mb-3">
+              <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-person"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="name"
+                  name="name"
+                  [(ngModel)]="formData.name"
+                  placeholder="Enter your full name"
+                  required>
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-envelope"></i>
+                </span>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="email"
+                  name="email"
+                  [(ngModel)]="formData.email"
+                  placeholder="your.email@example.com"
+                  required>
+              </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="mb-3">
+              <label for="phone" class="form-label">Phone Number</label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-telephone"></i>
+                </span>
+                <input 
+                  type="tel" 
+                  class="form-control" 
+                  id="phone"
+                  name="phone"
+                  [(ngModel)]="formData.phone"
+                  placeholder="+1 (555) 000-0000">
+              </div>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+              <label for="title" class="form-label">Job Title/Position</label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-briefcase"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="title"
+                  name="title"
+                  [(ngModel)]="formData.title"
+                  placeholder="e.g. Software Engineer">
+              </div>
+            </div>
+
+            <!-- Skill Level -->
+            <div class="mb-3">
+              <label for="skillLevel" class="form-label">Skill Level</label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-bar-chart"></i>
+                </span>
+                <select 
+                  class="form-select" 
+                  id="skillLevel"
+                  name="skillLevel"
+                  [(ngModel)]="formData.skillLevel">
+                  @for (level of skillLevels; track level) {
+                    <option [value]="level">{{ level }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Resume Upload -->
+            <div class="mb-3">
+              <label class="form-label">Resume/CV</label>
+              <app-file-upload 
+                [accept]="'.pdf,.doc,.docx'"
+                [maxSize]="5242880"
+                (fileSelected)="handleFileSelect($event)">
+              </app-file-upload>
+              <small class="text-muted">Upload your resume (PDF, DOC, DOCX - Max 5MB)</small>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-lock"></i>
+                </span>
+                <input 
+                  [type]="showPassword() ? 'text' : 'password'" 
+                  class="form-control" 
+                  id="password"
+                  name="password"
+                  [(ngModel)]="formData.password"
+                  placeholder="Minimum 8 characters"
+                  required>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary" 
+                  (click)="showPassword.set(!showPassword())">
+                  <i [class]="showPassword() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-lock-fill"></i>
+                </span>
+                <input 
+                  [type]="showConfirmPassword() ? 'text' : 'password'" 
+                  class="form-control" 
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  [(ngModel)]="confirmPassword"
+                  placeholder="Re-enter your password"
+                  required>
+                <button 
+                  type="button" 
+                  class="btn btn-outline-secondary" 
+                  (click)="showConfirmPassword.set(!showConfirmPassword())">
+                  <i [class]="showConfirmPassword() ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <div class="mb-4">
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  id="acceptTerms"
+                  name="acceptTerms"
+                  [(ngModel)]="acceptTerms"
+                  required>
+                <label class="form-check-label" for="acceptTerms">
+                  I agree to the <a href="#" class="text-decoration-none">Terms and Conditions</a> and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                </label>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+              type="submit" 
+              class="btn btn-primary w-100 mb-3"
+              [disabled]="loading() || !registerForm.form.valid || !acceptTerms">
+              @if (loading()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+                Creating Account...
+              } @else {
+                <i class="bi bi-person-plus me-2"></i>
+                Create Account
+              }
+            </button>
+
+            <!-- Login Link -->
+            <div class="text-center">
+              <span class="text-muted">Already have an account? </span>
+              <a routerLink="/auth/applicant-login" class="text-decoration-none fw-semibold">Sign In</a>
+            </div>
+
+            <!-- HR Registration Link -->
+            <div class="text-center mt-3">
+              <span class="text-muted">Are you a recruiter? </span>
+              <a routerLink="/auth/hr-register" class="text-decoration-none fw-semibold">Register as HR</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
