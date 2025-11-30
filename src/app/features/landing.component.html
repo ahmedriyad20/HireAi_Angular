@@ -1,0 +1,279 @@
+<div class="landing-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <nav class="navbar">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center w-100">
+          <div class="d-flex align-items-center gap-2">
+            <div class="sidebar-logo">
+              <i class="bi bi-robot"></i>
+            </div>
+            <span class="navbar-brand fw-bold fs-4">HireAI</span>
+          </div>
+          <div class="d-flex gap-2">
+            <a routerLink="/auth/hr-login" class="btn btn-ghost">HR Login</a>
+            <a routerLink="/auth/applicant-login" class="btn btn-primary">Applicant Login</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row align-items-center py-5">
+        <div class="col-lg-6 animate-fade-in-up">
+          <h1 class="display-3 fw-bold mb-4">
+            Interview System
+            <span class="gradient-text d-block">AI-Powered HR Recruitment</span>
+          </h1>
+          <p class="lead text-secondary mb-4">
+            Streamline your recruitment process with AI-powered applicant evaluation, 
+            automated technical screening, and intelligent candidate ranking.
+          </p>
+          <div class="d-flex flex-wrap gap-3">
+            <a routerLink="/auth/hr-login" class="btn btn-primary btn-lg">
+              <i class="bi bi-building"></i> Login as HR
+            </a>
+            <a routerLink="/auth/applicant-login" class="btn btn-outline-primary btn-lg">
+              <i class="bi bi-person"></i> Login as Applicant
+            </a>
+          </div>
+          <div class="d-flex gap-4 mt-4">
+            <a [routerLink]="['/jobs/public']" class="text-decoration-none">
+              <i class="bi bi-briefcase text-primary"></i>
+              <span class="ms-2">Browse Jobs</span>
+            </a>
+            <a [routerLink]="['/demo-exam']" class="text-decoration-none">
+              <i class="bi bi-play-circle text-primary"></i>
+              <span class="ms-2">Take Demo Exam</span>
+            </a>
+          </div>
+        </div>
+        <div class="col-lg-6 animate-fade-in-up stagger-2">
+          <div class="hero-illustration">
+            <div class="card border-0 shadow-lg">
+              <div class="card-body p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                  <div class="avatar-lg">AI</div>
+                  <div>
+                    <h6 class="mb-0">AI Interview Assistant</h6>
+                    <small class="text-muted">Evaluating candidate...</small>
+                  </div>
+                </div>
+                <div class="progress mb-2" style="height: 8px;">
+                  <div class="progress-bar" style="width: 75%"></div>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span class="badge badge-success">Technical: 85%</span>
+                  <span class="badge badge-primary">Culture Fit: 90%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">Powerful Features</h2>
+        <p class="lead text-secondary">Everything you need for modern recruitment</p>
+      </div>
+
+      <div class="row g-4">
+        @for (feature of features; track feature.title) {
+          <div class="col-md-4 animate-fade-in-up" [class]="'stagger-' + ($index + 1)">
+            <div class="card border-0 h-100 hover-lift">
+              <div class="card-body text-center p-4">
+                <div class="feature-icon mb-3">
+                  <i class="bi bi-{{ feature.icon }}"></i>
+                </div>
+                <h5 class="fw-semibold mb-2">{{ feature.title }}</h5>
+                <p class="text-secondary mb-0">{{ feature.description }}</p>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section py-5 bg-primary-soft">
+    <div class="container">
+      <div class="row g-4 text-center">
+        <div class="col-md-3">
+          <h2 class="display-4 fw-bold text-primary mb-1">10K+</h2>
+          <p class="text-secondary mb-0">Companies Using</p>
+        </div>
+        <div class="col-md-3">
+          <h2 class="display-4 fw-bold text-primary mb-1">500K+</h2>
+          <p class="text-secondary mb-0">Applicants Evaluated</p>
+        </div>
+        <div class="col-md-3">
+          <h2 class="display-4 fw-bold text-primary mb-1">95%</h2>
+          <p class="text-secondary mb-0">Accuracy Rate</p>
+        </div>
+        <div class="col-md-3">
+          <h2 class="display-4 fw-bold text-primary mb-1">80%</h2>
+          <p class="text-secondary mb-0">Time Saved</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials-section py-5">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">What Our Users Say</h2>
+        <p class="lead text-secondary">Trusted by leading companies worldwide</p>
+      </div>
+
+      <div class="row g-4">
+        @for (testimonial of testimonials; track testimonial.name) {
+          <div class="col-md-4">
+            <div class="card border-0 h-100">
+              <div class="card-body p-4">
+                <div class="mb-3">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <i class="bi bi-star-fill text-warning"></i>
+                  }
+                </div>
+                <p class="mb-4">"{{ testimonial.quote }}"</p>
+                <div class="d-flex align-items-center gap-3">
+                  <div class="avatar-md">{{ getInitials(testimonial.name) }}</div>
+                  <div>
+                    <h6 class="mb-0">{{ testimonial.name }}</h6>
+                    <small class="text-muted">{{ testimonial.role }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section class="pricing-section py-5 bg-primary-soft">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h2 class="display-5 fw-bold mb-3">Simple, Transparent Pricing</h2>
+        <p class="lead text-secondary">Choose the plan that's right for you</p>
+      </div>
+
+      <div class="row g-4 justify-content-center">
+        @for (plan of pricingPlans; track plan.name) {
+          <div class="col-md-4">
+            <div class="card border-0 h-100" [class.shadow-primary]="plan.popular">
+              @if (plan.popular) {
+                <div class="badge badge-primary position-absolute top-0 start-50 translate-middle">
+                  Most Popular
+                </div>
+              }
+              <div class="card-body p-4 text-center">
+                <h4 class="fw-bold mb-2">{{ plan.name }}</h4>
+                <div class="display-4 fw-bold text-primary mb-1">
+                  {{ plan.price }}
+                  @if (plan.price !== 'Custom') {
+                    <small class="fs-6 text-muted">/month</small>
+                  }
+                </div>
+                <p class="text-secondary mb-4">{{ plan.description }}</p>
+                <ul class="list-unstyled text-start mb-4">
+                  @for (feature of plan.features; track feature) {
+                    <li class="mb-2">
+                      <i class="bi bi-check-circle-fill text-success me-2"></i>
+                      {{ feature }}
+                    </li>
+                  }
+                </ul>
+                <button class="btn" [class]="plan.popular ? 'btn-primary w-100' : 'btn-outline-primary w-100'">
+                  Get Started
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section py-5">
+    <div class="container">
+      <div class="card border-0 gradient-primary text-white">
+        <div class="card-body p-5 text-center">
+          <h2 class="display-5 fw-bold mb-3">Ready to Transform Your Hiring?</h2>
+          <p class="lead mb-4">Join thousands of companies using AI-powered recruitment</p>
+          <div class="d-flex justify-content-center gap-3">
+            <a [routerLink]="['/hr/register']" class="btn btn-light btn-lg">
+              Start Free Trial
+            </a>
+            <a [routerLink]="['/demo']" class="btn btn-outline-light btn-lg">
+              Schedule Demo
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer py-5 bg-dark text-white">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="sidebar-logo">
+              <i class="bi bi-robot"></i>
+            </div>
+            <span class="fw-bold fs-4">HireAI</span>
+          </div>
+          <p class="text-white-50">
+            AI-Powered recruitment platform for modern hiring teams.
+          </p>
+        </div>
+        <div class="col-md-2">
+          <h6 class="fw-semibold mb-3">Product</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Features</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Pricing</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Security</a></li>
+          </ul>
+        </div>
+        <div class="col-md-2">
+          <h6 class="fw-semibold mb-3">Company</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">About</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Blog</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Careers</a></li>
+          </ul>
+        </div>
+        <div class="col-md-2">
+          <h6 class="fw-semibold mb-3">Support</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Help Center</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Contact</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">FAQs</a></li>
+          </ul>
+        </div>
+        <div class="col-md-2">
+          <h6 class="fw-semibold mb-3">Legal</h6>
+          <ul class="list-unstyled">
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Privacy Policy</a></li>
+            <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4 bg-white-50">
+      <div class="text-center text-white-50">
+        <p class="mb-0">&copy; 2025 HireAI. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</div>
