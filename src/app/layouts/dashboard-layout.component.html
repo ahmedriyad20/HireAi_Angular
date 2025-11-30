@@ -1,0 +1,19 @@
+<div class="main-wrapper">
+  <app-sidebar
+    [collapsed]="sidebarCollapsed()"
+    [menuSections]="menuSections()"
+    (onToggleCollapse)="sidebarCollapsed.set($event)">
+  </app-sidebar>
+
+  <div class="main-content" [class.expanded]="sidebarCollapsed()">
+    <app-header
+      [user]="user()"
+      [notificationCount]="notificationCount()"
+      (onLogout)="handleLogout()">
+    </app-header>
+
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>
