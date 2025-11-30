@@ -3,13 +3,41 @@
 }
 
 .application-card {
-  transition: all var(--transition-base);
-  border-left: 4px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  /* border-left: 4px solid transparent; */
+}
+
+.application-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  height: 0;
+  background: linear-gradient(180deg, var(--primary-500), var(--primary-700));
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  border-radius: inherit;
 }
 
 .application-card:hover {
-  box-shadow: var(--shadow-lg);
-  border-left-color: var(--primary-500);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(79, 70, 229, 0.1);
+}
+
+.application-card:hover::before {
+  height: 100%;
+}
+
+.application-card .card-body {
+  transition: padding 0.3s ease;
+}
+
+.application-card:hover .card-body {
+  padding-left: 1.5rem;
 }
 
 .application-detail {
@@ -24,3 +52,62 @@
 .btn-link:hover {
   color: var(--primary-700);
 }
+
+/* Job Icon Animation */
+.application-card h5 i {
+  transition: transform 0.3s ease, color 0.3s ease;
+  display: inline-block;
+}
+
+.application-card:hover h5 i {
+  transform: scale(1.1) rotate(5deg);
+  color: var(--primary-600);
+}
+
+/* Button Animation */
+.application-card .btn {
+  transition: all 0.3s ease;
+}
+
+.application-card:hover .btn-outline-primary {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+}
+
+/* Progress Bar Animation */
+.progress-bar {
+  transition: width 0.6s ease-in-out;
+}
+
+/* Card Stagger Animation */
+.application-card {
+  animation: slideUp 0.4s ease-out backwards;
+}
+
+.application-card:nth-child(1) { animation-delay: 0.05s; }
+.application-card:nth-child(2) { animation-delay: 0.1s; }
+.application-card:nth-child(3) { animation-delay: 0.15s; }
+.application-card:nth-child(4) { animation-delay: 0.2s; }
+.application-card:nth-child(5) { animation-delay: 0.25s; }
+.application-card:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stat Cards Animation */
+.stat-icon {
+  transition: transform 0.3s ease;
+}
+
+.card:hover .stat-icon {
+  transform: scale(1.1);
+}
+
