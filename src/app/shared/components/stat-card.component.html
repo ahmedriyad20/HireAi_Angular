@@ -1,0 +1,13 @@
+<div class="stat-card animate-fade-in-up">
+  <div class="stat-icon" [class]="data().iconColor">
+    <i class="bi bi-{{ data().icon }}"></i>
+  </div>
+  <div class="stat-value">{{ data().value }}</div>
+  <div class="stat-label">{{ data().label }}</div>
+  @if (data().trend) {
+    <div class="stat-trend" [class]="data().trend!.direction">
+      <i class="bi bi-{{ data().trend!.direction === 'up' ? 'arrow-up' : 'arrow-down' }}"></i>
+      <span>{{ data().trend!.value }}%</span>
+    </div>
+  }
+</div>

@@ -1,0 +1,138 @@
+<div class="applicant-dashboard">
+  <!-- Page Header -->
+  <div class="page-header mb-4">
+    <h1 class="page-title">My Dashboard</h1>
+    <p class="page-subtitle">Track your applications and improve your skills</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row g-3 mb-4">
+    @for (stat of statsData(); track stat.label) {
+      <div class="col-md-6 col-xl-3">
+        <app-stat-card [data]="stat"></app-stat-card>
+      </div>
+    }
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="row g-4 mb-4">
+    <!-- Left Column - Application Timeline -->
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-clock-history me-2"></i>
+            Application Timeline
+          </h5>
+          <p class="text-muted small mb-0">Track your recent job application progress</p>
+        </div>
+        <div class="card-body">
+          @if (timelineSteps().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+              <p>No applications yet. Start applying for jobs!</p>
+            </div>
+          } @else {
+            <div class="timeline-list">
+              @for (app of timelineSteps(); track app.id; let index = $index; let last = $last) {
+                <div class="d-flex align-items-start gap-3 mb-4">
+                  <div class="d-flex flex-column align-items-center">
+                    <div class="timeline-icon rounded-circle d-flex align-items-center justify-content-center"
+                         [ngClass]="'bg-' + getStatusColor(app.status)"
+                         style="width: 40px; height: 40px;">
+                      <i [class]="'bi bi-' + getStatusIcon(app.status) + ' text-white'"></i>
+                    </div>
+                    @if (!last) {
+                      <div class="timeline-line bg-border" style="width: 2px; height: 64px; margin-top: 8px;"></div>
+                    }
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <h6 class="mb-0 fw-semibold">{{ app.position }}</h6>
+                        <p class="text-muted small mb-0">{{ app.company }}</p>
+                      </div>
+                      <app-status-tag [status]="app.status"></app-status-tag>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 text-muted small mb-2">
+                      <span class="d-flex align-items-center gap-1">
+                        <i class="bi bi-calendar3"></i>
+                        Applied {{ app.date }}
+                      </span>
+                      @if (app.atsScore !== null && app.atsScore !== undefined) {
+                        <span>ATS Score: <strong class="text-primary">{{ app.atsScore }}%</strong></span>
+                      }
+                    </div>
+                    @if (app.examStatus === 'pending') {
+                      <button class="btn btn-sm btn-primary mt-2">
+                        <i class="bi bi-play-circle me-1"></i>
+                        Take Exam
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Skill Statistics -->
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-award me-2"></i>
+            Skill Statistics
+          </h5>
+        </div>
+        <div class="card-body">
+          @for (skill of skills(); track skill.name) {
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-medium">{{ skill.name }}</span>
+                <span class="small text-primary fw-semibold">{{ skill.score }}%</span>
+              </div>
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar" [style.width.%]="skill.score"></div>
+              </div>
+            </div>
+          }
+          <button class="btn btn-sm btn-outline-primary w-100 mt-2">
+            <i class="bi bi-trophy"></i>
+            Practice Mock Exams
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skill Improvement Chart -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-graph-up-arrow me-2"></i>
+            Skill Improvement
+          </h5>
+          <p class="text-muted small mb-0">Your progress over time</p>
+        </div>
+        <div class="card-body">
+          @if (skillProgressData().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-graph-up fs-1 d-block mb-3"></i>
+              <p>No skill data available yet. Take mock exams to track your progress!</p>
+            </div>
+          } @else {
+            <app-skill-improvement-chart [data]="skillProgressData()"></app-skill-improvement-chart>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+
+  
