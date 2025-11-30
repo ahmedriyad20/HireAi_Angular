@@ -1,0 +1,43 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <i class="bi bi-robot"></i>
+    </div>
+    @if (!collapsed()) {
+      <div class="sidebar-brand">HireAI</div>
+    }
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (section of menuSections(); track section.title) {
+      <div class="sidebar-nav-section">
+        @if (!collapsed()) {
+          <div class="sidebar-nav-title">{{ section.title }}</div>
+        }
+        @for (item of section.items; track item.label) {
+          <a 
+            [routerLink]="item.route" 
+            routerLinkActive="active"
+            class="sidebar-nav-item"
+            [title]="item.label">
+            <i class="bi bi-{{ item.icon }}"></i>
+            @if (!collapsed()) {
+              <span>{{ item.label }}</span>
+            }
+          </a>
+        }
+      </div>
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    <button 
+      class="btn btn-ghost w-100" 
+      (click)="toggleCollapse()">
+      <i class="bi bi-{{ collapsed() ? 'chevron-right' : 'chevron-left' }}"></i>
+      @if (!collapsed()) {
+        <span>Collapse</span>
+      }
+    </button>
+  </div>
+</aside>

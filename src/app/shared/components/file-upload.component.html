@@ -1,0 +1,40 @@
+<div 
+  class="file-upload-zone"
+  [class.drag-over]="isDragOver"
+  (click)="fileInput.click()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)">
+  
+  <div class="file-upload-icon">
+    <i class="bi bi-cloud-upload"></i>
+  </div>
+  
+  @if (selectedFile()) {
+    <div class="file-upload-title">{{ selectedFile()!.name }}</div>
+    <div class="file-upload-text text-success">
+      <i class="bi bi-check-circle"></i> File ready to upload
+    </div>
+  } @else {
+    <div class="file-upload-title">{{ title() }}</div>
+    <div class="file-upload-text">{{ description() }}</div>
+  }
+  
+  <input 
+    #fileInput
+    type="file" 
+    [accept]="accept()"
+    (change)="onFileSelected($event)"
+    style="display: none">
+</div>
+
+@if (selectedFile()) {
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <small class="text-muted">{{ formatFileSize(selectedFile()!.size) }}</small>
+    <button 
+      class="btn btn-sm btn-ghost" 
+      (click)="clearFile($event)">
+      <i class="bi bi-x"></i> Remove
+    </button>
+  </div>
+}

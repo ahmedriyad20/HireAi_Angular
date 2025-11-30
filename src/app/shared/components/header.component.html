@@ -1,0 +1,61 @@
+<header class="top-header">
+  <div class="header-search">
+    <i class="bi bi-search"></i>
+    <input 
+      type="text" 
+      placeholder="Search..." 
+      class="form-control"
+      [(ngModel)]="searchQuery">
+  </div>
+
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-icon notification-btn" title="Notifications">
+      <i class="bi bi-bell"></i>
+      @if (notificationCount() > 0) {
+        <span class="badge">{{ notificationCount() }}</span>
+      }
+    </button>
+
+    <button class="btn btn-ghost btn-icon" title="Help">
+      <i class="bi bi-question-circle"></i>
+    </button>
+
+    <div class="dropdown">
+      <button 
+        class="user-dropdown" 
+        type="button" 
+        data-bs-toggle="dropdown" 
+        aria-expanded="false">
+        <div class="user-avatar">
+          {{ getInitials(user()?.name || '') }}
+        </div>
+        <div class="user-info">
+          <div class="user-name">{{ user()?.name }}</div>
+          <div class="user-role">{{ user()?.role }}</div>
+        </div>
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="#">
+            <i class="bi bi-person"></i>
+            My Profile
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="#">
+            <i class="bi bi-gear"></i>
+            Settings
+          </a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item" (click)="onLogout.emit()">
+            <i class="bi bi-box-arrow-right"></i>
+            Logout
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
