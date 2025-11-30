@@ -38,7 +38,7 @@
             </span>
           </div>
         </div>
-        <app-status-tag [status]="getStatusClass(applicationDetails()!.applicationStatus)"></app-status-tag>
+        <app-status-tag [status]="applicationDetails()!.applicationStatus"></app-status-tag>
       </div>
     </div>
 
@@ -69,6 +69,17 @@
               </div>
               <div class="col-md-6">
                 <div class="d-flex align-items-center mb-2">
+                  <div class="icon-wrapper me-3" style="background: var(--info-light);">
+                    <i class="bi bi-briefcase text-info"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Experience Level</small>
+                    <strong>{{ getExperienceLevelText(applicationDetails()!.experienceLevel) }}</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex align-items-center mb-2">
                   <div class="icon-wrapper me-3" style="background: var(--success-light);">
                     <i class="bi bi-trophy text-success"></i>
                   </div>
@@ -79,7 +90,7 @@
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center mb-2">
                   <div class="icon-wrapper me-3" style="background: var(--warning-light);">
                     <i class="bi bi-file-earmark-text text-warning"></i>
                   </div>
@@ -89,15 +100,62 @@
                   </div>
                 </div>
               </div>
+              @if (applicationDetails()!.examScore !== null) {
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="icon-wrapper me-3" style="background: var(--indigo-light);">
+                      <i class="bi bi-star text-indigo"></i>
+                    </div>
+                    <div>
+                      <small class="text-muted d-block">Exam Score</small>
+                      <strong>{{ applicationDetails()!.examScore }}%</strong>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (applicationDetails()!.intrviewDate) {
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="icon-wrapper me-3" style="background: var(--purple-light);">
+                      <i class="bi bi-calendar-event text-purple"></i>
+                    </div>
+                    <div>
+                      <small class="text-muted d-block">Interview Date</small>
+                      <strong>{{ applicationDetails()!.intrviewDate | date: 'MMM dd, yyyy' }}</strong>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (applicationDetails()!.salaryRange) {
+                <div class="col-md-6">
+                  <div class="d-flex align-items-center mb-2">
+                    <div class="icon-wrapper me-3" style="background: var(--success-light);">
+                      <i class="bi bi-cash text-success"></i>
+                    </div>
+                    <div>
+                      <small class="text-muted d-block">Salary Range</small>
+                      <strong>{{ applicationDetails()!.salaryRange }}</strong>
+                    </div>
+                  </div>
+                </div>
+              }
               <div class="col-md-6">
                 <div class="d-flex align-items-center">
-                  <div class="icon-wrapper me-3" [style.background]="applicationDetails()!.isPassed ? 'var(--success-light)' : 'var(--danger-light)'">
-                    <i class="bi" [class.bi-check-circle]="applicationDetails()!.isPassed" [class.bi-x-circle]="!applicationDetails()!.isPassed" [class.text-success]="applicationDetails()!.isPassed" [class.text-danger]="!applicationDetails()!.isPassed"></i>
+                  <div class="icon-wrapper me-3" [style.background]="isExamPassed() ? 'var(--success-light)' : isExamFailed() ? 'var(--danger-light)' : 'var(--warning-light)'">
+                    <i class="bi" 
+                       [class.bi-check-circle]="isExamPassed()" 
+                       [class.bi-x-circle]="isExamFailed()" 
+                       [class.bi-hourglass-split]="applicationDetails()!.examEvaluationStatus === 'Pending'"
+                       [class.text-success]="isExamPassed()" 
+                       [class.text-danger]="isExamFailed()"
+                       [class.text-warning]="applicationDetails()!.examEvaluationStatus === 'Pending'"></i>
                   </div>
                   <div>
-                    <small class="text-muted d-block">Result</small>
-                    <strong [class.text-success]="applicationDetails()!.isPassed" [class.text-danger]="!applicationDetails()!.isPassed">
-                      {{ applicationDetails()!.isPassed ? 'Passed' : 'Not Passed' }}
+                    <small class="text-muted d-block">Exam Result</small>
+                    <strong [class.text-success]="isExamPassed()" 
+                            [class.text-danger]="isExamFailed()"
+                            [class.text-warning]="applicationDetails()!.examEvaluationStatus === 'Pending'">
+                      {{ getExamStatusText(applicationDetails()!.examEvaluationStatus) }}
                     </strong>
                   </div>
                 </div>
@@ -116,7 +174,7 @@
           </div>
           <div class="card-body">
             <div class="timeline">
-              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 0">
+              <div class="timeline-item completed">
                 <div class="timeline-marker completed">
                   <i class="bi bi-check"></i>
                 </div>
@@ -126,9 +184,29 @@
                 </div>
               </div>
               
-              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 1" [class.active]="applicationDetails()!.applicationStatus === 1">
-                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 1" [class.active]="applicationDetails()!.applicationStatus === 1">
-                  @if (applicationDetails()!.applicationStatus >= 1) {
+              <div class="timeline-item" 
+                   [class.completed]="getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 0" 
+                   [class.active]="applicationDetails()!.applicationStatus === 'UnderReview'">
+                <div class="timeline-marker" 
+                     [class.completed]="getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 0" 
+                     [class.active]="applicationDetails()!.applicationStatus === 'UnderReview'">
+                  @if (getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 0) {
+                    <i class="bi bi-check"></i>
+                  }
+                </div>
+                <div class="timeline-content">
+                  <h6>Under Review</h6>
+                  <small class="text-muted">{{ applicationDetails()!.applicationStatus === 'UnderReview' ? 'Currently reviewing' : 'Reviewed' }}</small>
+                </div>
+              </div>
+              
+              <div class="timeline-item" 
+                   [class.completed]="getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 1" 
+                   [class.active]="applicationDetails()!.applicationStatus === 'ATSPassed'">
+                <div class="timeline-marker" 
+                     [class.completed]="getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 1" 
+                     [class.active]="applicationDetails()!.applicationStatus === 'ATSPassed'">
+                  @if (getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 1) {
                     <i class="bi bi-check"></i>
                   }
                 </div>
@@ -138,41 +216,59 @@
                 </div>
               </div>
               
-              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 2" [class.active]="applicationDetails()!.applicationStatus === 2">
-                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 2" [class.active]="applicationDetails()!.applicationStatus === 2">
-                  @if (applicationDetails()!.applicationStatus >= 2) {
+              <div class="timeline-item" 
+                   [class.completed]="getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 2" 
+                   [class.active]="applicationDetails()!.applicationStatus === 'ExamSent'">
+                <div class="timeline-marker" 
+                     [class.completed]="getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 2" 
+                     [class.active]="applicationDetails()!.applicationStatus === 'ExamSent'">
+                  @if (getApplicationStatusOrder(applicationDetails()!.applicationStatus) >= 2) {
                     <i class="bi bi-check"></i>
                   }
                 </div>
                 <div class="timeline-content">
                   <h6>Technical Exam</h6>
                   <small class="text-muted">{{ getExamStatusText(applicationDetails()!.examEvaluationStatus) }}</small>
-                </div>
-              </div>
-              
-              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 3" [class.active]="applicationDetails()!.applicationStatus === 3">
-                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 3" [class.active]="applicationDetails()!.applicationStatus === 3">
-                  @if (applicationDetails()!.applicationStatus >= 3) {
-                    <i class="bi bi-check"></i>
+                  @if (applicationDetails()!.examScore !== null) {
+                    <small class="text-muted d-block">Score: {{ applicationDetails()!.examScore }}%</small>
                   }
                 </div>
-                <div class="timeline-content">
-                  <h6>Interview Round</h6>
-                  <small class="text-muted">{{ applicationDetails()!.applicationStatus >= 3 ? 'Scheduled' : 'Pending' }}</small>
-                </div>
               </div>
               
-              <div class="timeline-item" [class.completed]="applicationDetails()!.applicationStatus >= 4">
-                <div class="timeline-marker" [class.completed]="applicationDetails()!.applicationStatus >= 4">
-                  @if (applicationDetails()!.applicationStatus >= 4) {
+              <div class="timeline-item" 
+                   [class.completed]="applicationDetails()!.applicationStatus === 'Completed'" 
+                   [class.active]="applicationDetails()!.applicationStatus === 'Completed' && isExamFailed()">
+                <div class="timeline-marker" 
+                     [class.completed]="applicationDetails()!.applicationStatus === 'Completed'">
+                  @if (applicationDetails()!.applicationStatus === 'Completed') {
                     <i class="bi bi-check"></i>
                   }
                 </div>
                 <div class="timeline-content">
                   <h6>Final Decision</h6>
-                  <small class="text-muted">{{ applicationDetails()!.applicationStatus >= 4 ? 'Completed' : 'Pending' }}</small>
+                  @if (applicationDetails()!.applicationStatus === 'Completed') {
+                    <small class="text-muted" [class.text-success]="isExamPassed()" [class.text-danger]="isExamFailed()">
+                      {{ isExamPassed() ? 'Congratulations! Application Accepted' : 'Application Completed' }}
+                    </small>
+                  } @else if (applicationDetails()!.applicationStatus === 'Rejected') {
+                    <small class="text-danger">Application Rejected</small>
+                  } @else {
+                    <small class="text-muted">Pending</small>
+                  }
                 </div>
               </div>
+              
+              @if (applicationDetails()!.applicationStatus === 'Rejected') {
+                <div class="timeline-item completed">
+                  <div class="timeline-marker bg-danger">
+                    <i class="bi bi-x"></i>
+                  </div>
+                  <div class="timeline-content">
+                    <h6 class="text-danger">Application Rejected</h6>
+                    <small class="text-muted">Unfortunately, your application was not successful</small>
+                  </div>
+                </div>
+              }
             </div>
           </div>
         </div>
@@ -206,7 +302,7 @@
           </div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              @if (applicationDetails()!.examEvaluationStatus === 0) {
+              @if (applicationDetails()!.examEvaluationStatus === 'Pending' && applicationDetails()!.applicationStatus === 'ExamSent') {
                 <button class="btn btn-primary">
                   <i class="bi bi-play-circle me-2"></i>
                   Start Exam

@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApplicationDetailsService } from '../../core/services/application-details.service';
-import { ApplicationDetails } from '../../core/models/application-details.model';
+import { ApplicationDetails, ApplicationStatus, ExamEvaluationStatus, ExperienceLevel } from '../../core/models/application-details.model';
 import { StatusTagComponent } from '../../shared/components/status-tag.component';
 
 @Component({
@@ -49,31 +49,59 @@ export class ApplicationDetailsComponent implements OnInit {
     });
   }
 
-  getStatusText(status: number): string {
-    const statusMap: { [key: number]: string } = {
-      0: 'Pending',
-      1: 'Under Review',
-      2: 'Interview',
-      3: 'Offer',
-      4: 'Accepted/Rejected'
+  getStatusText(status: ApplicationStatus): string {
+    const statusMap: { [key in ApplicationStatus]: string } = {
+      'ExamSent': 'Exam Sent',
+      'ATSPassed': 'ATS Passed',
+      'UnderReview': 'Under Review',
+      'Completed': 'Completed',
+      'Rejected': 'Rejected'
     };
-    return statusMap[status] || 'Unknown';
+    return statusMap[status];
   }
 
-  getStatusClass(status: number): 'pending' | 'in-progress' | 'interview' | 'accepted' | 'rejected' {
-    if (status === 0) return 'pending';
-    if (status >= 1 && status <= 3) return 'in-progress';
-    return 'accepted';
+  getStatusClass(status: ApplicationStatus): ApplicationStatus {
+    return status;
   }
 
-  getExamStatusText(status: number): string {
-    const statusMap: { [key: number]: string } = {
-      0: 'Not Started',
-      1: 'In Progress',
-      2: 'Completed',
-      3: 'Evaluated'
+  getExamStatusText(status: ExamEvaluationStatus): string {
+    const statusMap: { [key in ExamEvaluationStatus]: string } = {
+      'Pending': 'Pending',
+      'Passed': 'Passed',
+      'Failed': 'Failed'
     };
-    return statusMap[status] || 'Unknown';
+    return statusMap[status];
+  }
+
+  getExperienceLevelText(level: ExperienceLevel): string {
+    const levelMap: { [key in ExperienceLevel]: string } = {
+      'EntryLevel': 'Entry Level',
+      'Junior': 'Junior',
+      'MidLevel': 'Mid Level',
+      'Senior': 'Senior',
+      'TeamLead': 'Team Lead',
+      'Executive': 'Executive'
+    };
+    return levelMap[level];
+  }
+
+  getApplicationStatusOrder(status: ApplicationStatus): number {
+    const orderMap: { [key in ApplicationStatus]: number } = {
+      'UnderReview': 0,
+      'ATSPassed': 1,
+      'ExamSent': 2,
+      'Completed': 3,
+      'Rejected': -1
+    };
+    return orderMap[status];
+  }
+
+  isExamPassed(): boolean {
+    return this.applicationDetails()?.examEvaluationStatus === 'Passed';
+  }
+
+  isExamFailed(): boolean {
+    return this.applicationDetails()?.examEvaluationStatus === 'Failed';
   }
 
   goBack(): void {
