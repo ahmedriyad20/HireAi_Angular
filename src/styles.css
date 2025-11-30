@@ -733,6 +733,52 @@ a:hover {
   background-color: var(--danger-500);
 }
 
+/* API Status Types */
+.status-tag.ExamSent {
+  background-color: var(--primary-100);
+  color: var(--primary-700);
+}
+
+.status-tag.ExamSent::before {
+  background-color: var(--primary-500);
+}
+
+.status-tag.ATSPassed {
+  background-color: var(--success-100);
+  color: var(--success-700);
+}
+
+.status-tag.ATSPassed::before {
+  background-color: var(--success-500);
+}
+
+.status-tag.UnderReview {
+  background-color: var(--warning-100);
+  color: var(--warning-600);
+}
+
+.status-tag.UnderReview::before {
+  background-color: var(--warning-500);
+}
+
+.status-tag.Completed {
+  background-color: var(--success-100);
+  color: var(--success-700);
+}
+
+.status-tag.Completed::before {
+  background-color: var(--success-500);
+}
+
+.status-tag.Rejected {
+  background-color: var(--danger-100);
+  color: var(--danger-700);
+}
+
+.status-tag.Rejected::before {
+  background-color: var(--danger-500);
+}
+
 /* ============================================
    Modal Styles
    ============================================ */
