@@ -16,11 +16,11 @@ export interface ApplicationResponse {
   providedIn: 'root'
 })
 export class ApplicationsService {
-  private apiUrl = 'http://localhost:5290/api/Applicant/ApplicationsList';
+  private apiUrl = 'http://localhost:5290/api/ApplicantDashboard';
 
   constructor(private http: HttpClient) {}
 
   getApplicationsList(applicantId: number): Observable<ApplicationResponse[]> {
-    return this.http.get<ApplicationResponse[]>(`${this.apiUrl}/${applicantId}`);
+    return this.http.get<ApplicationResponse[]>(`${this.apiUrl}/${applicantId}/Applications`);
   }
 }

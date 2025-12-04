@@ -7,7 +7,7 @@ import { ApplicantDashboardData } from '../models/dashboard.model';
   providedIn: 'root'
 })
 export class ApplicantDashboardService {
-  private apiUrl = 'http://localhost:5290/api/Applicant/Dashboard';
+  private apiUrl = 'http://localhost:5290/api/ApplicantDashboard';
 
   constructor(private http: HttpClient) {}
 

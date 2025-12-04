@@ -7,11 +7,11 @@ import { ApplicationDetails } from '../models/application-details.model';
   providedIn: 'root'
 })
 export class ApplicationDetailsService {
-  private apiUrl = 'http://localhost:5290/api/Applicant/ApplicationDetails';
+  private apiUrl = 'http://localhost:5290/api/ApplicantDashboard';
 
   constructor(private http: HttpClient) {}
 
-  getApplicationDetails(applicationId: number, applicantId: number): Observable<ApplicationDetails> {
-    return this.http.get<ApplicationDetails>(`${this.apiUrl}/${applicationId},${applicantId}`);
+  getApplicationDetails(applicantId: number, applicationId: number): Observable<ApplicationDetails> {
+    return this.http.get<ApplicationDetails>(`${this.apiUrl}/${applicantId}/Applications/${applicationId}`);
   }
 }
