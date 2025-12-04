@@ -73,6 +73,10 @@ export const routes: Routes = [
       {
         path: 'mock-exams',
         loadComponent: () => import('./features/applicant/mock-exams.component').then(m => m.MockExamsComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./features/applicant/my-profile.component').then(m => m.MyProfileComponent)
       }
     ]
   },
