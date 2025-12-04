@@ -1,0 +1,286 @@
+<div class="profile-wrapper">
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+    </div>
+    <p class="loading-text">Loading your profile...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-container">
+    <div class="error-box">
+      <i class="bi bi-exclamation-triangle"></i>
+      <h2>Oops! Something went wrong</h2>
+      <p>{{ error() }}</p>
+      <button class="retry-btn" (click)="loadProfile()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile Content - All Data on One Page -->
+  <div *ngIf="profile() && !loading()" class="profile-page">
+    <!-- Hero Header Section -->
+    <div class="profile-hero">
+      <div class="hero-background"></div>
+      <div class="hero-content">
+        <div class="profile-avatar animate-scale-in">
+          <div class="avatar-circle">
+            {{ profile()!.name.charAt(0).toUpperCase() }}
+          </div>
+          <div class="status-indicator" [class.active]="profile()!.isActive">
+            <span class="status-dot"></span>
+            <span class="status-text">{{ profile()!.isActive ? 'Active' : 'Inactive' }}</span>
+          </div>
+        </div>
+        
+        <div class="hero-text animate-slide-up">
+          <h1 class="profile-title-main">{{ profile()!.name }}</h1>
+          <p class="profile-job-title">{{ profile()!.title }}</p>
+          <div class="hero-meta">
+            <div class="meta-badge">
+              <i class="bi bi-envelope"></i>
+              {{ profile()!.email }}
+            </div>
+            <div class="meta-badge">
+              <i class="bi bi-telephone"></i>
+              {{ profile()!.phone }}
+            </div>
+            <div class="meta-badge">
+              <i class="bi bi-cake2"></i>
+              Born 2001
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="profile-content">
+      <!-- Left Column: Personal Details -->
+      <div class="column-left">
+        <!-- About Section -->
+        <section class="profile-section animate-fade-in-left">
+          <div class="section-header">
+            <i class="bi bi-person-circle"></i>
+            <h2>About</h2>
+          </div>
+          <div class="section-content">
+            <p class="bio-text">{{ profile()!.bio }}</p>
+            <div class="about-grid">
+              <div class="about-item">
+                <span class="label">Skill Level</span>
+                <span class="value skill-level-badge">
+                  <i class="bi bi-star-fill"></i>
+                  {{ profile()!.skillLevel }}
+                </span>
+              </div>
+              <div class="about-item">
+                <span class="label">Member Since</span>
+                <span class="value">{{ formatDate(profile()!.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Personal Information Section -->
+        <section class="profile-section animate-fade-in-left" style="animation-delay: 0.1s">
+          <div class="section-header">
+            <i class="bi bi-info-circle"></i>
+            <h2>Personal Information</h2>
+          </div>
+          <div class="section-content">
+            <div class="info-list">
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-at"></i>
+                  ID
+                </span>
+                <span class="info-value">{{ profile()!.id }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-envelope-at"></i>
+                  Email
+                </span>
+                <span class="info-value">{{ profile()!.email }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-telephone"></i>
+                  Phone
+                </span>
+                <span class="info-value">{{ profile()!.phone }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-calendar-event"></i>
+                  Date of Birth
+                </span>
+                <span class="info-value">{{ profile()!.dateOfBirth }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-briefcase"></i>
+                  Title
+                </span>
+                <span class="info-value">{{ profile()!.title }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-check-circle"></i>
+                  Status
+                </span>
+                <span class="info-value status-tag" [class.active]="profile()!.isActive">
+                  {{ profile()!.isActive ? '✓ Active' : '✗ Inactive' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Account Activity Section -->
+        <section class="profile-section animate-fade-in-left" style="animation-delay: 0.2s">
+          <div class="section-header">
+            <i class="bi bi-clock-history"></i>
+            <h2>Account Activity</h2>
+          </div>
+          <div class="section-content">
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-marker">
+                  <i class="bi bi-person-plus"></i>
+                </div>
+                <div class="timeline-content">
+                  <h4>Account Created</h4>
+                  <p>{{ formatDate(profile()!.createdAt) }}</p>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-marker">
+                  <i class="bi bi-box-arrow-in-right"></i>
+                </div>
+                <div class="timeline-content">
+                  <h4>Last Login</h4>
+                  <p>{{ formatDate(profile()!.lastLogin) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Resume Section -->
+        <section class="profile-section animate-fade-in-left" style="animation-delay: 0.3s">
+          <div class="section-header">
+            <i class="bi bi-file-pdf"></i>
+            <h2>Resume</h2>
+          </div>
+          <div class="section-content">
+            <div class="resume-box">
+              <i class="bi bi-file-earmark-pdf"></i>
+              <p class="resume-url">{{ profile()!.resumeUrl }}</p>
+              <a [href]="profile()!.resumeUrl" target="_blank" class="download-btn">
+                <i class="bi bi-download"></i>
+                Download Resume
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right Column: Skills -->
+      <div class="column-right">
+        <!-- Skills Section -->
+        <section class="profile-section skills-section animate-fade-in-right">
+          <div class="section-header">
+            <i class="bi bi-lightning-charge"></i>
+            <h2>Skills & Proficiency</h2>
+            <span class="skill-count">{{ profile()!.applicantSkills.length }} Skills</span>
+          </div>
+          <div class="section-content">
+            <div class="skills-list">
+              <div
+                *ngFor="let skill of profile()!.applicantSkills; let i = index"
+                class="skill-item animate-slide-up"
+                [style.animation-delay]="(i * 0.08) + 's'"
+              >
+                <div class="skill-header">
+                  <h4 class="skill-name">{{ skill.skillName }}</h4>
+                  <span class="skill-rate" [ngClass]="'rate-' + getSkillColor(skill.skillRate)">
+                    {{ skill.skillRate }}%
+                  </span>
+                </div>
+                
+                <div class="skill-bar-wrapper">
+                  <div class="skill-bar-bg">
+                    <div
+                      class="skill-bar-fill"
+                      [ngClass]="'fill-' + getSkillColor(skill.skillRate)"
+                      [style.width.%]="skill.skillRate"
+                      [style.animation-delay]="(i * 0.1) + 's'"
+                    ></div>
+                  </div>
+                </div>
+
+                <div class="skill-meta">
+                  <span class="skill-level">
+                    <i class="bi bi-star-fill"></i>
+                    <span *ngIf="skill.skillRate >= 80">Expert</span>
+                    <span *ngIf="skill.skillRate >= 60 && skill.skillRate < 80">Advanced</span>
+                    <span *ngIf="skill.skillRate >= 40 && skill.skillRate < 60">Intermediate</span>
+                    <span *ngIf="skill.skillRate < 40">Beginner</span>
+                  </span>
+                  <span class="skill-id">ID: {{ skill.skillId }}</span>
+                </div>
+
+                <div class="skill-details" *ngIf="skill.improvementPercentage !== null || skill.notes">
+                  <div *ngIf="skill.improvementPercentage !== null" class="detail-item">
+                    <span class="label">Improvement:</span>
+                    <span class="value">{{ skill.improvementPercentage }}%</span>
+                  </div>
+                  <div *ngIf="skill.notes" class="detail-item">
+                    <span class="label">Notes:</span>
+                    <span class="value">{{ skill.notes }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Skills Summary Stats -->
+        <section class="profile-section skills-stats animate-fade-in-right" style="animation-delay: 0.1s">
+          <div class="section-header">
+            <i class="bi bi-graph-up"></i>
+            <h2>Overall Stats</h2>
+          </div>
+          <div class="section-content">
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-value">{{ profile()!.applicantSkills.length }}</div>
+                <div class="stat-label">Total Skills</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">{{ getAverageProficiency() }}%</div>
+                <div class="stat-label">Average Proficiency</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">{{ getExpertSkillsCount() }}</div>
+                <div class="stat-label">Expert Skills</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-value">{{ getAdvancedSkillsCount() }}</div>
+                <div class="stat-label">Advanced Skills</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
