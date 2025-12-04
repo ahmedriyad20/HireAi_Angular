@@ -1,21 +1,12 @@
-﻿import { Component, signal } from '@angular/core';
+﻿import { Component, signal, OnInit, inject, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StatusTagComponent } from '../../shared/components/status-tag.component';
+import { MockExamsService, MockExamQuickStats, MockExam as ApiMockExam } from '../../core/services/mock-exams.service';
 
-interface MockExam {
+interface MockExam extends ApiMockExam {
   id: number;
-  title: string;
-  category: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  questions: number;
-  duration: number;
-  attempts: number;
-  bestScore: number | null;
-  lastAttempt: string | null;
-  status: 'not-started' | 'in-progress' | 'completed';
-  description: string;
 }
 
 @Component({
@@ -25,133 +16,182 @@ interface MockExam {
   templateUrl: './mock-exams.component.html',
   styleUrls: ['./mock-exams.component.css']
 })
-export class MockExamsComponent {
+export class MockExamsComponent implements OnInit {
+  private mockExamsService = inject(MockExamsService);
+  
   selectedCategory = 'all';
   selectedDifficulty = 'all';
+  
+  quickStats = signal<MockExamQuickStats | null>(null);
+  isLoadingStats = signal<boolean>(true);
 
-  mockExams = signal<MockExam[]>([
-    {
-      id: 1,
-      title: 'JavaScript Fundamentals',
-      category: 'Technical',
-      difficulty: 'Easy',
-      questions: 20,
-      duration: 30,
-      attempts: 2,
-      bestScore: 85,
-      lastAttempt: 'Nov 25, 2025',
-      status: 'completed',
-      description: 'Test your basic JavaScript knowledge including variables, functions, and control structures.'
-    },
-    {
-      id: 2,
-      title: 'React Advanced Concepts',
-      category: 'Technical',
-      difficulty: 'Hard',
-      questions: 25,
-      duration: 45,
-      attempts: 1,
-      bestScore: 72,
-      lastAttempt: 'Nov 23, 2025',
-      status: 'completed',
-      description: 'Deep dive into React hooks, context, performance optimization, and advanced patterns.'
-    },
-    {
-      id: 3,
-      title: 'Problem Solving & Logic',
-      category: 'Aptitude',
-      difficulty: 'Medium',
-      questions: 30,
-      duration: 40,
-      attempts: 0,
-      bestScore: null,
-      lastAttempt: null,
-      status: 'not-started',
-      description: 'Evaluate your logical reasoning and problem-solving abilities.'
-    },
-    {
-      id: 4,
-      title: 'Communication Skills',
-      category: 'Behavioral',
-      difficulty: 'Easy',
-      questions: 15,
-      duration: 20,
-      attempts: 1,
-      bestScore: null,
-      lastAttempt: 'Nov 20, 2025',
-      status: 'in-progress',
-      description: 'Assessment of your communication and interpersonal skills.'
-    },
-    {
-      id: 5,
-      title: 'English Proficiency',
-      category: 'Language',
-      difficulty: 'Medium',
-      questions: 25,
-      duration: 35,
-      attempts: 3,
-      bestScore: 91,
-      lastAttempt: 'Nov 18, 2025',
-      status: 'completed',
-      description: 'Comprehensive English language test covering grammar, vocabulary, and comprehension.'
-    },
-    {
-      id: 6,
-      title: 'Database Design',
-      category: 'Technical',
-      difficulty: 'Medium',
-      questions: 20,
-      duration: 30,
-      attempts: 0,
-      bestScore: null,
-      lastAttempt: null,
-      status: 'not-started',
-      description: 'Test your knowledge of database concepts, SQL, and normalization.'
+  recommendedExams = signal<MockExam[]>([]);
+  allExamsData = signal<MockExam[]>([]);
+  isLoadingExams = signal<boolean>(true);
+  isLoadingMoreExams = signal<boolean>(false);
+
+  filteredRecommendedExams = signal<MockExam[]>([]);
+  displayedAllExams = signal<MockExam[]>([]);
+  hasMoreExams = signal<boolean>(true);
+
+  private itemsPerPage = 6;
+  private currentPageIndex = 0;
+  private hasMoreExamsPrivate = true;
+
+  @ViewChild('scrollContainer') scrollContainer?: ElementRef;
+
+  ngOnInit() {
+    // TODO: Replace with actual applicant ID from auth service
+    const applicantId = '2'; // Changed to test with applicantId = 2
+    this.loadQuickStats(applicantId);
+    this.loadMockExams(applicantId);
+  }
+
+  loadQuickStats(applicantId: string) {
+    this.isLoadingStats.set(true);
+    this.mockExamsService.getQuickStats(applicantId).subscribe({
+      next: (stats) => {
+        this.quickStats.set(stats);
+        this.isLoadingStats.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading quick stats:', error);
+        // Set mock data as fallback for development
+        this.quickStats.set({
+          mockExamsTakenNumber: 4,
+          mockExamsTakenNumberForCurrentMonth: 1,
+          averageExamsTakenScore: 85,
+          averageExamsTakenScoreImprovement: 13
+        });
+        this.isLoadingStats.set(false);
+      }
+    });
+  }
+
+  loadMockExams(applicantId: string) {
+    this.isLoadingExams.set(true);
+    console.log('Loading exams with applicantId:', applicantId);
+    
+    this.mockExamsService.getRecommendedMockExams(applicantId).subscribe({
+      next: (exams) => {
+        console.log('Recommended exams loaded:', exams);
+        const recommendedWithIds = exams.map((exam, index) => ({
+          ...exam,
+          id: index + 1
+        }));
+        this.recommendedExams.set(recommendedWithIds);
+        this.filteredRecommendedExams.set(recommendedWithIds);
+      },
+      error: (error) => {
+        console.error('Error loading recommended exams:', error);
+        console.error('URL attempted: http://localhost:5290/api/Exam/RecommendedMockExams/' + applicantId);
+      }
+    });
+
+    this.mockExamsService.getAllMockExams(applicantId).subscribe({
+      next: (exams) => {
+        console.log('All exams loaded:', exams);
+        const allWithIds = exams.map((exam, index) => ({
+          ...exam,
+          id: index + 100
+        }));
+        this.allExamsData.set(allWithIds);
+        this.currentPageIndex = 0;
+        this.hasMoreExamsPrivate = true;
+        this.hasMoreExams.set(true);
+        this.loadMoreExams();
+        this.isLoadingExams.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading all exams:', error);
+        console.error('URL attempted: http://localhost:5290/api/Exam/AllMockExams/' + applicantId);
+        this.isLoadingExams.set(false);
+      }
+    });
+  }
+
+  loadMoreExams() {
+    if (this.isLoadingMoreExams() || !this.hasMoreExamsPrivate) {
+      return;
     }
-  ]);
 
-  filteredExams = signal<MockExam[]>(this.mockExams());
+    this.isLoadingMoreExams.set(true);
+    
+    // Simulate a slight delay to show loading skeleton
+    setTimeout(() => {
+      const filtered = this.filterExamsList(this.allExamsData());
+      const startIndex = this.currentPageIndex * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
+      const newExams = filtered.slice(startIndex, endIndex);
+
+      if (newExams.length === 0) {
+        this.hasMoreExamsPrivate = false;
+        this.hasMoreExams.set(false);
+        this.isLoadingMoreExams.set(false);
+        return;
+      }
+
+      this.displayedAllExams.set([...this.displayedAllExams(), ...newExams]);
+      this.currentPageIndex++;
+      this.isLoadingMoreExams.set(false);
+
+      if (endIndex >= filtered.length) {
+        this.hasMoreExamsPrivate = false;
+        this.hasMoreExams.set(false);
+      }
+    }, 500);
+  }
 
   filterExams() {
-    let filtered = this.mockExams();
+    // Reset pagination when filtering
+    this.currentPageIndex = 0;
+    this.hasMoreExamsPrivate = true;
+    this.hasMoreExams.set(true);
+    this.displayedAllExams.set([]);
+    this.loadMoreExams();
 
-    if (this.selectedCategory !== 'all') {
-      filtered = filtered.filter(exam => exam.category === this.selectedCategory);
-    }
+    const recommendedFiltered = this.filterExamsList(this.recommendedExams());
+    this.filteredRecommendedExams.set(recommendedFiltered);
+  }
+
+  private filterExamsList(exams: MockExam[]): MockExam[] {
+    let filtered = exams;
 
     if (this.selectedDifficulty !== 'all') {
-      filtered = filtered.filter(exam => exam.difficulty === this.selectedDifficulty);
+      filtered = filtered.filter(exam => exam.examLevel === this.selectedDifficulty);
     }
 
-    this.filteredExams.set(filtered);
+    return filtered;
   }
 
-  getDifficultyClass(difficulty: string): string {
-    switch(difficulty) {
-      case 'Easy': return 'success';
-      case 'Medium': return 'warning';
-      case 'Hard': return 'danger';
+  onScroll(event: Event) {
+    const element = event.target as HTMLElement;
+    const scrollPosition = element.scrollTop + element.clientHeight;
+    const scrollHeight = element.scrollHeight;
+
+    // Trigger load when user scrolls to 80% of the container
+    if (scrollPosition >= scrollHeight * 0.8) {
+      this.loadMoreExams();
+    }
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll() {
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight;
+
+    // Trigger load when user scrolls to 80% of the page
+    if (scrollPosition >= documentHeight * 0.8) {
+      this.loadMoreExams();
+    }
+  }
+
+  getDifficultyClass(level: string): string {
+    switch(level) {
+      case 'Beginner': return 'success';
+      case 'Intermediate': return 'warning';
+      case 'Advanced': return 'danger';
       default: return 'secondary';
     }
-  }
-
-  totalAttempts(): number {
-    return this.mockExams().reduce((sum, exam) => sum + exam.attempts, 0);
-  }
-
-  completedExams(): number {
-    return this.mockExams().filter(exam => exam.status === 'completed').length;
-  }
-
-  inProgressExams(): number {
-    return this.mockExams().filter(exam => exam.status === 'in-progress').length;
-  }
-
-  averageScore(): number {
-    const examsWithScores = this.mockExams().filter(exam => exam.bestScore !== null);
-    if (examsWithScores.length === 0) return 0;
-    
-    const sum = examsWithScores.reduce((acc, exam) => acc + (exam.bestScore || 0), 0);
-    return Math.round(sum / examsWithScores.length);
   }
 }

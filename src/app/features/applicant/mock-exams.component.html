@@ -7,170 +7,243 @@
         <p class="page-subtitle">Practice and improve your skills with our mock exams</p>
       </div>
       <div class="d-flex gap-2">
-        <select class="form-select" [(ngModel)]="selectedCategory" (change)="filterExams()">
-          <option value="all">All Categories</option>
-          <option value="Technical">Technical</option>
-          <option value="Behavioral">Behavioral</option>
-          <option value="Aptitude">Aptitude</option>
-          <option value="Language">Language</option>
-        </select>
         <select class="form-select" [(ngModel)]="selectedDifficulty" (change)="filterExams()">
           <option value="all">All Levels</option>
-          <option value="Easy">Easy</option>
-          <option value="Medium">Medium</option>
-          <option value="Hard">Hard</option>
+          <option value="Beginner">Beginner</option>
+          <option value="Intermediate">Intermediate</option>
+          <option value="Advanced">Advanced</option>
         </select>
       </div>
     </div>
   </div>
 
-  <!-- Stats Overview -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-3">
-            <div class="stat-icon primary">
-              <i class="bi bi-trophy"></i>
-            </div>
-            <div>
-              <div class="stat-value">{{ totalAttempts() }}</div>
-              <div class="stat-label">Total Attempts</div>
-            </div>
-          </div>
-        </div>
+  <!-- Quick Stats Overview -->
+  @if (isLoadingStats()) {
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-3">
-            <div class="stat-icon success">
-              <i class="bi bi-check-circle"></i>
-            </div>
-            <div>
-              <div class="stat-value">{{ completedExams() }}</div>
-              <div class="stat-label">Completed</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-3">
-            <div class="stat-icon warning">
-              <i class="bi bi-clock-history"></i>
-            </div>
-            <div>
-              <div class="stat-value">{{ inProgressExams() }}</div>
-              <div class="stat-label">In Progress</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3">
-      <div class="card">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-3">
-            <div class="stat-icon indigo">
-              <i class="bi bi-bar-chart"></i>
-            </div>
-            <div>
-              <div class="stat-value">{{ averageScore() }}%</div>
-              <div class="stat-label">Avg Score</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Exams Grid -->
-  <div class="row g-4">
-    @for (exam of filteredExams(); track exam.id) {
-      <div class="col-md-6 col-lg-4">
-        <div class="card exam-card h-100">
-          <div class="card-body">
-            <!-- Badge Section -->
-            <div class="d-flex justify-content-between align-items-start mb-3">
-              <span class="badge" [class]="'badge-' + getDifficultyClass(exam.difficulty)">
-                {{ exam.difficulty }}
-              </span>
-              @if (exam.bestScore !== null) {
-                <span class="badge badge-success">
-                  <i class="bi bi-star-fill"></i>
-                  {{ exam.bestScore }}%
-                </span>
-              }
-            </div>
-
-            <!-- Title & Category -->
-            <h5 class="card-title mb-2">{{ exam.title }}</h5>
-            <p class="text-muted small mb-3">
-              <i class="bi bi-folder"></i>
-              {{ exam.category }}
-            </p>
-
-            <!-- Description -->
-            <p class="text-secondary small mb-3">{{ exam.description }}</p>
-
-            <!-- Exam Details -->
-            <div class="exam-details mb-3">
-              <div class="detail-item">
-                <i class="bi bi-question-circle"></i>
-                <span>{{ exam.questions }} Questions</span>
+  } @else if (quickStats()) {
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card quick-stat-card">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="stat-label">Total Exams Taken</div>
+                <div class="stat-value">{{ quickStats()!.mockExamsTakenNumber }}</div>
               </div>
-              <div class="detail-item">
-                <i class="bi bi-clock"></i>
-                <span>{{ exam.duration }} mins</span>
-              </div>
-              <div class="detail-item">
-                <i class="bi bi-arrow-repeat"></i>
-                <span>{{ exam.attempts }} Attempts</span>
+              <div class="stat-icon-large primary">
+                <i class="bi bi-file-earmark-text"></i>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card quick-stat-card">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="stat-label">This Month</div>
+                <div class="stat-value">{{ quickStats()!.mockExamsTakenNumberForCurrentMonth }}</div>
+              </div>
+              <div class="stat-icon-large success">
+                <i class="bi bi-calendar-check"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card quick-stat-card">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="stat-label">Average Score</div>
+                <div class="stat-value">{{ quickStats()!.averageExamsTakenScore }}%</div>
+              </div>
+              <div class="stat-icon-large warning">
+                <i class="bi bi-bar-chart"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card quick-stat-card">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="stat-label">Score Improvement</div>
+                <div class="stat-value">+{{ quickStats()!.averageExamsTakenScoreImprovement }}%</div>
+              </div>
+              <div class="stat-icon-large indigo">
+                <i class="bi bi-graph-up-arrow"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
-            @if (exam.lastAttempt) {
-              <div class="last-attempt mb-3">
-                <small class="text-muted">
-                  <i class="bi bi-calendar"></i>
-                  Last attempt: {{ exam.lastAttempt }}
-                </small>
+  <!-- Loading Indicator -->
+  @if (isLoadingExams()) {
+    <div class="text-center py-4">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading exams...</span>
+      </div>
+    </div>
+  } @else {
+    <!-- Recommended Exams Section -->
+    <div class="mb-5">
+      <h2 class="mb-3">
+        <i class="bi bi-star-fill text-warning"></i>
+        Recommended Exams For You
+      </h2>
+      @if (filteredRecommendedExams().length > 0) {
+        <div class="row g-4">
+          @for (exam of filteredRecommendedExams(); track exam.id) {
+            <div class="col-md-6 col-lg-4">
+              <div class="card exam-card h-100">
+                <div class="card-body">
+                  <!-- Badge Section -->
+                  <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge" [class]="'badge-' + getDifficultyClass(exam.examLevel)">
+                      {{ exam.examLevel }}
+                    </span>
+                  </div>
+
+                  <!-- Title -->
+                  <h5 class="card-title">{{ exam.examName }}</h5>
+
+                  <!-- Description -->
+                  <p class="text-secondary small">{{ exam.examDescription }}</p>
+
+                  <!-- Exam Details -->
+                  <div class="exam-details">
+                    <div class="detail-item">
+                      <i class="bi bi-question-circle"></i>
+                      <span>{{ exam.numberOfQuestions }} Questions</span>
+                    </div>
+                    <div class="detail-item">
+                      <i class="bi bi-clock"></i>
+                      <span>{{ exam.durationInMinutes }} mins</span>
+                    </div>
+                  </div>
+
+                  <!-- Action Button -->
+                  <div class="d-grid">
+                    <button class="btn btn-primary" type="button">
+                      <i class="bi bi-play-circle"></i>
+                      Start Exam
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="text-center py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+          <p class="text-muted mt-3">No recommended exams found.</p>
+        </div>
+      }
+    </div>
+
+    <!-- All Exams Section with Infinite Scroll -->
+    <div class="mb-5">
+      <h2 class="mb-3">
+        <i class="bi bi-list-check"></i>
+        All Available Exams
+      </h2>
+      
+      <div class="all-exams-scroll-container">
+        @if (displayedAllExams().length > 0) {
+          <div class="row g-4">
+            @for (exam of displayedAllExams(); track exam.id) {
+              <div class="col-md-6 col-lg-4">
+                <div class="card exam-card h-100">
+                  <div class="card-body">
+                    <!-- Badge Section -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <span class="badge" [class]="'badge-' + getDifficultyClass(exam.examLevel)">
+                        {{ exam.examLevel }}
+                      </span>
+                    </div>
+
+                    <!-- Title -->
+                    <h5 class="card-title">{{ exam.examName }}</h5>
+
+                    <!-- Description -->
+                    <p class="text-secondary small">{{ exam.examDescription }}</p>
+
+                    <!-- Exam Details -->
+                    <div class="exam-details">
+                      <div class="detail-item">
+                        <i class="bi bi-question-circle"></i>
+                        <span>{{ exam.numberOfQuestions }} Questions</span>
+                      </div>
+                      <div class="detail-item">
+                        <i class="bi bi-clock"></i>
+                        <span>{{ exam.durationInMinutes }} mins</span>
+                      </div>
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="d-grid">
+                      <button class="btn btn-primary" type="button">
+                        <i class="bi bi-play-circle"></i>
+                        Start Exam
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             }
-
-            <!-- Action Button -->
-            <div class="d-grid">
-              @if (exam.status === 'not-started') {
-                <button class="btn btn-primary">
-                  <i class="bi bi-play-circle"></i>
-                  Start Exam
-                </button>
-              } @else if (exam.status === 'in-progress') {
-                <button class="btn btn-warning">
-                  <i class="bi bi-arrow-clockwise"></i>
-                  Continue Exam
-                </button>
-              } @else {
-                <button class="btn btn-outline-primary">
-                  <i class="bi bi-arrow-repeat"></i>
-                  Retake Exam
-                </button>
-              }
-            </div>
           </div>
-        </div>
-      </div>
-    }
-  </div>
+        } @else {
+          <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
+            <p class="text-muted mt-3">No exams found matching your filters.</p>
+          </div>
+        }
 
-  @if (filteredExams().length === 0) {
-    <div class="text-center py-5">
-      <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-muted);"></i>
-      <p class="text-muted mt-3">No exams found matching your filters.</p>
+        <!-- Skeleton Loading Cards -->
+        @if (isLoadingMoreExams()) {
+          <div class="row g-4 skeleton-container">
+            @for (item of [1, 2, 3, 4, 5, 6]; track item) {
+              <div class="col-md-6 col-lg-4">
+                <div class="card exam-card skeleton-card h-100">
+                  <div class="card-body">
+                    <div class="skeleton-badge"></div>
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                    <div style="margin-top: auto;">
+                      <div class="skeleton-details"></div>
+                      <div class="skeleton-button"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- No More Exams Message -->
+        @if (displayedAllExams().length > 0 && !isLoadingMoreExams() && !hasMoreExams) {
+          <div class="text-center py-4 mt-4">
+            <p class="text-muted">
+              <i class="bi bi-check-circle"></i>
+              All exams loaded
+            </p>
+          </div>
+        }
+      </div>
     </div>
   }
 </div>
