@@ -9,9 +9,9 @@
               <i class="bi bi-person-check"></i>
             </div>
           </div>
-          <h2 class="display-5 fw-bold mb-3">Find Your Dream Job</h2>
+          <h2 class="display-5 fw-bold mb-3">Welcome to HireAI</h2>
           <p class="lead text-center mb-4">
-            Practice with AI-powered mock exams and track your progress
+            Practice with AI-powered mock exams and find your perfect job match
           </p>
           <div class="row g-3 w-100" style="max-width: 500px;">
             <div class="col-6">
@@ -55,9 +55,16 @@
                 <i class="bi bi-person-check"></i>
               </div>
             </div>
-            <h3 class="fw-bold mb-2">Applicant Login</h3>
-            <p class="text-muted">Sign in to access your application dashboard</p>
+            <h3 class="fw-bold mb-2">Sign In</h3>
+            <p class="text-muted">Welcome back! Please enter your credentials</p>
           </div>
+
+          @if (successMessage()) {
+            <div class="alert alert-success d-flex align-items-center" role="alert">
+              <i class="bi bi-check-circle alert-icon"></i>
+              <div>{{ successMessage() }}</div>
+            </div>
+          }
 
           @if (error()) {
             <div class="alert alert-danger d-flex align-items-center" role="alert">
@@ -88,7 +95,7 @@
             <div class="mb-3">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <label for="password" class="form-label mb-0">Password</label>
-                <a [routerLink]="['/applicant/forgot-password']" class="text-decoration-none small">
+                <a href="#" class="text-decoration-none small" (click)="$event.preventDefault()">
                   Forgot Password?
                 </a>
               </div>
@@ -104,7 +111,7 @@
                   [(ngModel)]="credentials.password"
                   placeholder="Enter your password"
                   required
-                  minlength="6">
+                  minlength="4">
                 <button 
                   class="btn btn-outline-secondary" 
                   type="button"
@@ -139,12 +146,18 @@
             </button>
 
             <div class="text-center mb-3">
-              <p class="text-muted mb-0">
-                Don't have an account? 
-                <a routerLink="/auth/applicant-register" class="text-decoration-none fw-medium">
-                  Register Now
-                </a>
+              <p class="text-muted mb-2">
+                Don't have an account?
               </p>
+              <div class="d-flex gap-2 justify-content-center">
+                <a routerLink="/auth/applicant-register" class="text-decoration-none fw-medium">
+                  <i class="bi bi-person-plus"></i> Register as Applicant
+                </a>
+                <span class="text-muted">|</span>
+                <a routerLink="/auth/hr-register" class="text-decoration-none fw-medium">
+                  <i class="bi bi-building"></i> Register as HR
+                </a>
+              </div>
             </div>
           </form>
 
@@ -157,11 +170,12 @@
             Continue with Google
           </button>
 
-          <div class="text-center mt-3">
-            <a routerLink="/auth/hr-login" class="text-decoration-none small">
-              <i class="bi bi-building"></i>
-              Are you an employer? Login here
-            </a>
+          <div class="text-center mt-4">
+            <small class="text-muted">
+              By signing in, you agree to our 
+              <a href="#" class="text-decoration-none">Terms of Service</a> and 
+              <a href="#" class="text-decoration-none">Privacy Policy</a>
+            </small>
           </div>
         </div>
       </div>

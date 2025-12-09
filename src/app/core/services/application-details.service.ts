@@ -11,7 +11,7 @@ export class ApplicationDetailsService {
 
   constructor(private http: HttpClient) {}
 
-  getApplicationDetails(applicantId: number, applicationId: number): Observable<ApplicationDetails> {
+  getApplicationDetails(applicationId: number, applicantId: number): Observable<ApplicationDetails> {
     return this.http.get<ApplicationDetails>(`${this.apiUrl}/${applicantId}/Applications/${applicationId}`);
   }
 }

@@ -1,0 +1,265 @@
+<div class="job-details-page">
+  @if (isLoading()) {
+    <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle me-2"></i>
+      {{ error() }}
+      <button class="btn btn-sm btn-outline-danger ms-3" (click)="goBack()">
+        Go Back
+      </button>
+    </div>
+  } @else if (jobDetails()) {
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+      <button class="btn btn-sm btn-ghost mb-3" (click)="goBack()">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to Jobs
+      </button>
+      
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <h1 class="page-title mb-0">{{ jobDetails()!.title }}</h1>
+            <span class="badge" [class]="'bg-' + getJobStatusClass(jobDetails()!.jobStatus)">
+              {{ jobDetails()!.jobStatus }}
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-3 text-muted flex-wrap">
+            <span>
+              <i class="bi bi-building me-1"></i>
+              {{ jobDetails()!.companyName }}
+            </span>
+            <span>
+              <i class="bi bi-geo-alt me-1"></i>
+              {{ jobDetails()!.location }}
+            </span>
+            <span>
+              <i class="bi bi-calendar me-1"></i>
+              Posted on {{ jobDetails()!.createdAt | date: 'MMM dd, yyyy' }}
+            </span>
+            @if (jobDetails()!.applicationDeadline) {
+              <span class="text-danger">
+                <i class="bi bi-clock me-1"></i>
+                Deadline: {{ jobDetails()!.applicationDeadline | date: 'MMM dd, yyyy' }}
+              </span>
+            }
+          </div>
+        </div>
+        
+        <button class="btn btn-primary btn-lg" (click)="applyForJob()">
+          <i class="bi bi-send me-2"></i>
+          Apply Now
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+      <!-- Left Column - Job Details -->
+      <div class="col-lg-8">
+        <!-- Job Description Card -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-file-text me-2"></i>
+              Job Description
+            </h5>
+          </div>
+          <div class="card-body">
+            <p class="job-description">{{ jobDetails()!.description }}</p>
+          </div>
+        </div>
+
+        <!-- Required Skills Card -->
+        @if (jobDetails()!.skills && jobDetails()!.skills.length > 0) {
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="card-title mb-0">
+                <i class="bi bi-star me-2"></i>
+                Required Skills
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                @for (skill of jobDetails()!.skills; track skill.id) {
+                  <div class="col-md-6">
+                    <div class="skill-card">
+                      <div class="d-flex align-items-start">
+                        <div class="skill-icon me-3">
+                          <i class="bi bi-check-circle-fill text-success"></i>
+                        </div>
+                        <div>
+                          <h6 class="mb-1">{{ skill.title }}</h6>
+                          <small class="text-muted">{{ skill.description }}</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Exam Information Card -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-clipboard-check me-2"></i>
+              Exam Information
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="info-item">
+                  <i class="bi bi-clock text-primary me-2"></i>
+                  <div>
+                    <small class="text-muted d-block">Duration</small>
+                    <strong>{{ jobDetails()!.examDurationMinutes }} minutes</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item">
+                  <i class="bi bi-question-circle text-info me-2"></i>
+                  <div>
+                    <small class="text-muted d-block">Number of Questions</small>
+                    <strong>{{ jobDetails()!.numberOfQuestions }} questions</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item">
+                  <i class="bi bi-trophy text-warning me-2"></i>
+                  <div>
+                    <small class="text-muted d-block">Minimum ATS Score</small>
+                    <strong>{{ jobDetails()!.atsMinimumScore }}%</strong>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="info-item">
+                  <i class="bi bi-envelope text-success me-2"></i>
+                  <div>
+                    <small class="text-muted d-block">Auto Send Exam</small>
+                    <strong>{{ jobDetails()!.autoSend ? 'Yes' : 'No' }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Job Summary -->
+      <div class="col-lg-4">
+        <!-- Job Overview Card -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-info-circle me-2"></i>
+              Job Overview
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="overview-item mb-3">
+              <div class="overview-label">
+                <i class="bi bi-star me-2"></i>
+                Experience Level
+              </div>
+              <div class="overview-value">
+                {{ getExperienceLevelText(jobDetails()!.experienceLevel) }}
+              </div>
+            </div>
+
+            <div class="overview-item mb-3">
+              <div class="overview-label">
+                <i class="bi bi-briefcase me-2"></i>
+                Employment Type
+              </div>
+              <div class="overview-value">
+                {{ getEmploymentTypeText(jobDetails()!.employmentType) }}
+              </div>
+            </div>
+
+            <div class="overview-item mb-3">
+              <div class="overview-label">
+                <i class="bi bi-cash me-2"></i>
+                Salary Range
+              </div>
+              <div class="overview-value">
+                {{ jobDetails()!.salaryRange }}
+              </div>
+            </div>
+
+            <div class="overview-item mb-3">
+              <div class="overview-label">
+                <i class="bi bi-geo-alt me-2"></i>
+                Location
+              </div>
+              <div class="overview-value">
+                {{ jobDetails()!.location }}
+              </div>
+            </div>
+
+            <div class="overview-item">
+              <div class="overview-label">
+                <i class="bi bi-calendar-event me-2"></i>
+                Application Deadline
+              </div>
+              <div class="overview-value">
+                {{ jobDetails()!.applicationDeadline | date: 'MMM dd, yyyy' }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Application Stats Card -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-graph-up me-2"></i>
+              Application Stats
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="stat-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">Total Applications</span>
+                <span class="badge bg-primary fs-6">{{ totalApplications() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card">
+          <div class="card-header">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-lightning me-2"></i>
+              Quick Actions
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary" (click)="applyForJob()">
+                <i class="bi bi-send me-2"></i>
+                Apply for this Job
+              </button>
+              <button class="btn btn-outline-secondary" (click)="goBack()">
+                <i class="bi bi-arrow-left me-2"></i>
+                Back to Jobs
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

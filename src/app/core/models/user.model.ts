@@ -44,21 +44,30 @@ export interface HR extends User {
 }
 
 export interface ApplicantRegistration {
-  name: string;
+  fullName: string;
   email: string;
   password: string;
-  phone?: string;
-  title?: string;
-  skillLevel?: SkillLevel;
+  confirmPassword: string;
+  phone: string;
+  address: string;
+  dateOfBirth: string;
+  title: string;
+  resumeUrl?: string;
+  skillLevel: SkillLevel;
   resumeFile?: File;
 }
 
 export interface HRRegistration {
-  name: string;
+  fullName: string;
   email: string;
   password: string;
-  phone?: string;
+  confirmPassword: string;
+  phone: string;
+  hrAddress: string;
+  dateOfBirth: string;
   companyName: string;
-  title?: string;
-  bio?: string;
+  companyAddress: string;
+  companyDescription: string;
+  jobTitle: string;
+  accountType: AccountType;
 }

@@ -4,6 +4,7 @@ export type ExamEvaluationStatus = 'Pending' | 'Passed' | 'Failed';
 
 export interface ApplicationDetails {
   applicationId: number;
+  jobId?: number;
   jobTitle: string;
   companyName: string;
   companyLocation: string;

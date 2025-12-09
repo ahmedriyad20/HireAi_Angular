@@ -1,6 +1,6 @@
 ﻿import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
 export interface User {
@@ -23,6 +23,8 @@ export class HeaderComponent {
 
   searchQuery = '';
 
+  constructor(private router: Router) {}
+
   getInitials(name: string): string {
     return name
       .split(' ')
@@ -30,5 +32,15 @@ export class HeaderComponent {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  }
+
+  handleSearch(): void {
+    if (this.searchQuery.trim()) {
+      this.router.navigate(['/applicant/jobs'], {
+        queryParams: { search: this.searchQuery.trim() }
+      });
+    } else {
+      this.router.navigate(['/applicant/jobs']);
+    }
   }
 }

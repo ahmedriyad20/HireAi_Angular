@@ -27,6 +27,12 @@
   <div *ngIf="profile() && !loading()" class="profile-page">
     <!-- Hero Header Section -->
     <div class="profile-hero">
+      <!-- Edit Button -->
+      <button *ngIf="!isEditMode()" class="edit-profile-btn animate-fade-in" (click)="enterEditMode()">
+        <i class="bi bi-pencil"></i>
+        Edit Profile
+      </button>
+
       <div class="hero-background"></div>
       <div class="hero-content">
         <div class="profile-avatar animate-scale-in">
@@ -52,11 +58,189 @@
               {{ profile()!.phone }}
             </div>
             <div class="meta-badge">
-              <i class="bi bi-cake2"></i>
-              Born 2001
+              <i class="bi bi-geo-alt"></i>
+              {{ profile()!.address || 'No address provided' }}
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Edit Form Modal -->
+    <div *ngIf="isEditMode()" class="edit-modal">
+      <div class="edit-modal-content">
+        <div class="edit-modal-header">
+          <h2><i class="bi bi-pencil-square"></i> Edit Profile</h2>
+          <button class="close-btn" (click)="cancelEdit()" [disabled]="isSaving()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Error Message in Modal -->
+        <div *ngIf="error() && isEditMode()" class="modal-error">
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ error() }}
+        </div>
+
+        <form (ngSubmit)="saveProfile()" class="edit-form">
+          <!-- Personal Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="bi bi-person-circle"></i> Personal Information
+            </h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fullName">
+                  <i class="bi bi-person"></i> Full Name
+                </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  [(ngModel)]="editForm.fullName"
+                  name="fullName"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="dateOfBirth">
+                  <i class="bi bi-calendar"></i> Date of Birth
+                </label>
+                <input
+                  type="date"
+                  id="dateOfBirth"
+                  [(ngModel)]="editForm.dateOfBirth"
+                  name="dateOfBirth"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone">
+                  <i class="bi bi-telephone"></i> Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  [(ngModel)]="editForm.phone"
+                  name="phone"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="address">
+                  <i class="bi bi-geo-alt"></i> Address
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  [(ngModel)]="editForm.address"
+                  name="address"
+                  [disabled]="isSaving()"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Professional Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="bi bi-briefcase"></i> Professional Information
+            </h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="title">
+                  <i class="bi bi-badge"></i> Job Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  [(ngModel)]="editForm.title"
+                  name="title"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="skillLevel">
+                  <i class="bi bi-star"></i> Skill Level
+                </label>
+                <select
+                  id="skillLevel"
+                  [(ngModel)]="editForm.skillLevel"
+                  name="skillLevel"
+                  required
+                  [disabled]="isSaving()"
+                >
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Expert">Expert</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="bio">
+                <i class="bi bi-card-text"></i> Bio / Summary
+              </label>
+              <textarea
+                id="bio"
+                [(ngModel)]="editForm.bio"
+                name="bio"
+                rows="4"
+                placeholder="Tell us about yourself, your experience, and what you're looking for..."
+                [disabled]="isSaving()"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Resume Upload Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="bi bi-file-earmark-pdf"></i> Resume
+            </h3>
+            <div class="form-group">
+              <app-file-upload
+                [title]="'Upload New Resume'"
+                [description]="'Drag and drop your PDF resume or click to browse'"
+                [accept]="'.pdf'"
+                [maxSize]="10485760"
+                (fileSelected)="handleResumeFileSelect($event)">
+              </app-file-upload>
+              <small class="text-muted">
+                <i class="bi bi-info-circle"></i> Leave empty to keep your current resume. Maximum file size: 10MB
+              </small>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-cancel"
+              (click)="cancelEdit()"
+              [disabled]="isSaving()"
+            >
+              <i class="bi bi-x-circle"></i>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn-save"
+              [disabled]="isSaving()"
+            >
+              <i class="bi" [ngClass]="isSaving() ? 'bi-hourglass-split' : 'bi-check-circle'"></i>
+              {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -83,6 +267,10 @@
               <div class="about-item">
                 <span class="label">Member Since</span>
                 <span class="value">{{ formatDate(profile()!.createdAt) }}</span>
+              </div>
+              <div class="about-item">
+                <span class="label">Address</span>
+                <span class="value">{{ profile()!.address || 'Not specified' }}</span>
               </div>
             </div>
           </div>
@@ -130,6 +318,13 @@
                   Title
                 </span>
                 <span class="info-value">{{ profile()!.title }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">
+                  <i class="bi bi-geo-alt"></i>
+                  Address
+                </span>
+                <span class="info-value">{{ profile()!.address || 'Not specified' }}</span>
               </div>
               <div class="info-item">
                 <span class="info-label">

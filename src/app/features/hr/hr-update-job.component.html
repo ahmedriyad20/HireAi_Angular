@@ -1,0 +1,285 @@
+<div class="update-job-container">
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading">
+    <div class="spinner"></div>
+    <p>Loading job details...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-message">
+    <i class="error-icon">⚠️</i>
+    <p>{{ error() }}</p>
+    <button (click)="cancel()" class="btn-secondary">Go Back</button>
+  </div>
+
+  <!-- Form Content -->
+  <div *ngIf="!loading() && !error()" class="form-container">
+    <div class="form-header">
+      <button (click)="cancel()" class="btn-back">
+        <span>←</span> Back
+      </button>
+      <h1>Update Job</h1>
+    </div>
+
+    <form [formGroup]="jobForm" (ngSubmit)="onSubmit()" class="job-form">
+      <!-- Basic Information Section -->
+      <div class="form-section">
+        <h2 class="section-title">Basic Information</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="title">Job Title <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="title" 
+              formControlName="title" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('title')"
+              placeholder="e.g., Senior Software Engineer"
+            />
+            <span *ngIf="isFieldInvalid('title')" class="error-text">
+              {{ getFieldError('title') }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="companyName">Company Name <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="companyName" 
+              formControlName="companyName" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('companyName')"
+              placeholder="e.g., Tech Corp"
+            />
+            <span *ngIf="isFieldInvalid('companyName')" class="error-text">
+              {{ getFieldError('companyName') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Job Description <span class="required">*</span></label>
+          <textarea 
+            id="description" 
+            formControlName="description" 
+            class="form-control"
+            [class.invalid]="isFieldInvalid('description')"
+            rows="6"
+            placeholder="Describe the role, responsibilities, and requirements..."
+          ></textarea>
+          <span *ngIf="isFieldInvalid('description')" class="error-text">
+            {{ getFieldError('description') }}
+          </span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="location">Location <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="location" 
+              formControlName="location" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('location')"
+              placeholder="e.g., New York, NY or Remote"
+            />
+            <span *ngIf="isFieldInvalid('location')" class="error-text">
+              {{ getFieldError('location') }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="salaryRange">Salary Range <span class="required">*</span></label>
+            <input 
+              type="text" 
+              id="salaryRange" 
+              formControlName="salaryRange" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('salaryRange')"
+              placeholder="e.g., $80,000 - $120,000"
+            />
+            <span *ngIf="isFieldInvalid('salaryRange')" class="error-text">
+              {{ getFieldError('salaryRange') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Job Details Section -->
+      <div class="form-section">
+        <h2 class="section-title">Job Details</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="jobStatus">Job Status <span class="required">*</span></label>
+            <select 
+              id="jobStatus" 
+              formControlName="jobStatus" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('jobStatus')"
+            >
+              <option *ngFor="let status of jobStatuses" [value]="status">
+                {{ status }}
+              </option>
+            </select>
+            <span *ngIf="isFieldInvalid('jobStatus')" class="error-text">
+              {{ getFieldError('jobStatus') }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="experienceLevel">Experience Level <span class="required">*</span></label>
+            <select 
+              id="experienceLevel" 
+              formControlName="experienceLevel" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('experienceLevel')"
+            >
+              <option *ngFor="let level of experienceLevels" [value]="level">
+                {{ level }}
+              </option>
+            </select>
+            <span *ngIf="isFieldInvalid('experienceLevel')" class="error-text">
+              {{ getFieldError('experienceLevel') }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="employmentType">Employment Type <span class="required">*</span></label>
+            <select 
+              id="employmentType" 
+              formControlName="employmentType" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('employmentType')"
+            >
+              <option *ngFor="let type of employmentTypes" [value]="type">
+                {{ type }}
+              </option>
+            </select>
+            <span *ngIf="isFieldInvalid('employmentType')" class="error-text">
+              {{ getFieldError('employmentType') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="applicationDeadline">Application Deadline <span class="required">*</span></label>
+            <input 
+              type="datetime-local" 
+              id="applicationDeadline" 
+              formControlName="applicationDeadline" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('applicationDeadline')"
+            />
+            <span *ngIf="isFieldInvalid('applicationDeadline')" class="error-text">
+              {{ getFieldError('applicationDeadline') }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam Configuration Section -->
+      <div class="form-section">
+        <h2 class="section-title">Exam Configuration</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="examDurationMinutes">Exam Duration (10-40 minutes) <span class="required">*</span></label>
+            <input 
+              type="number" 
+              id="examDurationMinutes" 
+              formControlName="examDurationMinutes" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('examDurationMinutes')"
+              min="10"
+              max="40"
+              placeholder="40"
+            />
+            <span *ngIf="isFieldInvalid('examDurationMinutes')" class="error-text">
+              {{ getFieldError('examDurationMinutes') }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="numberOfQuestions">Number of Questions <span class="required">*</span></label>
+            <input 
+              type="number" 
+              id="numberOfQuestions" 
+              formControlName="numberOfQuestions" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('numberOfQuestions')"
+              min="1"
+              placeholder="40"
+            />
+            <span *ngIf="isFieldInvalid('numberOfQuestions')" class="error-text">
+              {{ getFieldError('numberOfQuestions') }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label for="atsMinimumScore">Minimum ATS Score (0-100) <span class="required">*</span></label>
+            <input 
+              type="number" 
+              id="atsMinimumScore" 
+              formControlName="atsMinimumScore" 
+              class="form-control"
+              [class.invalid]="isFieldInvalid('atsMinimumScore')"
+              min="0"
+              max="100"
+              placeholder="0"
+            />
+            <span *ngIf="isFieldInvalid('atsMinimumScore')" class="error-text">
+              {{ getFieldError('atsMinimumScore') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              formControlName="autoSend"
+              class="checkbox-input"
+            />
+            <span>Automatically send exam to qualified applicants</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" (click)="cancel()" class="btn-cancel" [disabled]="submitting()">
+          Cancel
+        </button>
+        <button type="submit" class="btn-submit" [disabled]="submitting() || jobForm.invalid">
+          <span *ngIf="!submitting()">Update Job</span>
+          <span *ngIf="submitting()">Updating...</span>
+        </button>
+      </div>
+
+      <div *ngIf="error() && !loading()" class="form-error">
+        {{ error() }}
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Success Dialog -->
+@if (showSuccessDialog()) {
+  <div class="modal-overlay" (click)="closeSuccessDialog()">
+    <div class="confirmation-dialog success-dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-icon success-icon">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <h3 class="dialog-title">Success!</h3>
+      <p class="dialog-message">Job updated successfully! Redirecting...</p>
+      <div class="dialog-actions">
+        <button class="btn btn-primary" (click)="closeSuccessDialog()" type="button">
+          Go to Job Details
+        </button>
+      </div>
+    </div>
+  </div>
+}

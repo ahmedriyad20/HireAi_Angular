@@ -1,12 +1,42 @@
 <div class="applicant-dashboard">
-  <!-- Page Header -->
-  <div class="page-header mb-4">
-    <h1 class="page-title">My Dashboard</h1>
-    <p class="page-subtitle">Track your applications and improve your skills</p>
-  </div>
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading dashboard...</span>
+      </div>
+      <p class="text-muted mt-3">Loading your dashboard...</p>
+    </div>
+  }
 
-  <!-- Stats Cards -->
-  <div class="row g-3 mb-4">
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-container">
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+        <div class="flex-grow-1">
+          <strong>Oops! Something went wrong</strong>
+          <p class="mb-0 mt-1">{{ error() }}</p>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button class="btn btn-primary" (click)="loadDashboardData()">
+          <i class="bi bi-arrow-clockwise me-2"></i> Try Again
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Dashboard Content - Only show when no error and not loading -->
+  @else {
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+      <h1 class="page-title">My Dashboard</h1>
+      <p class="page-subtitle">Track your applications and improve your skills</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
     @for (stat of statsData(); track stat.label) {
       <div class="col-md-6 col-xl-3">
         <app-stat-card [data]="stat"></app-stat-card>
@@ -132,7 +162,6 @@
       </div>
     </div>
   </div>
+  }
+</div>
 
-  
-
-  

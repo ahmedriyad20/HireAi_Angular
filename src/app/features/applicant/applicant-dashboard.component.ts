@@ -5,6 +5,7 @@ import { StatusTagComponent } from '../../shared/components/status-tag.component
 import { SkillImprovementChartComponent, SkillProgressData } from '../../shared/components/skill-improvement-chart.component';
 import { ApplicantDashboardService } from '../../core/services/applicant-dashboard.service';
 import { ApplicantDashboardData } from '../../core/models/dashboard.model';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-applicant-dashboard',
@@ -15,9 +16,11 @@ import { ApplicantDashboardData } from '../../core/models/dashboard.model';
 })
 export class ApplicantDashboardComponent implements OnInit {
   private dashboardService = inject(ApplicantDashboardService);
+  private authService = inject(AuthService);
   
   dashboardData = signal<ApplicantDashboardData | null>(null);
   isLoading = signal<boolean>(true);
+  error = signal<string | null>(null);
   
   statsData = signal<StatCardData[]>([
     {
@@ -50,10 +53,17 @@ export class ApplicantDashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
-  private loadDashboardData(): void {
+  loadDashboardData(): void {
     this.isLoading.set(true);
-    // TODO: Replace with actual applicant ID from auth service
-    const applicantId = 2;
+    this.error.set(null);
+    const userId = this.authService.getUserId();
+    if (!userId) {
+      console.error('User ID not found');
+      this.error.set('User not authenticated. Please login again.');
+      this.isLoading.set(false);
+      return;
+    }
+    const applicantId = parseInt(userId, 10);
     
     this.dashboardService.getDashboardData(applicantId).subscribe({
       next: (data) => {
@@ -65,6 +75,13 @@ export class ApplicantDashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading dashboard data:', error);
+        if (error.status === 403) {
+          this.error.set('Access denied. You do not have permission to view this dashboard.');
+        } else if (error.status === 401) {
+          this.error.set('Your session has expired. Please login again.');
+        } else {
+          this.error.set('Failed to load dashboard data. Please try again later.');
+        }
         this.isLoading.set(false);
       }
     });

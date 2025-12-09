@@ -1,0 +1,468 @@
+<div class="container">
+  <div class="page-header">
+    <div class="header-content">
+      <i class="bi bi-plus-circle-fill header-icon"></i>
+      <div>
+        <h1 class="page-title">Create New Job</h1>
+        <p class="page-subtitle">Post a new job opening and configure exam settings</p>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="error-banner">
+      <i class="bi bi-exclamation-circle-fill"></i>
+      <span>{{ error() }}</span>
+      <button class="close-btn" (click)="error.set(null)">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+  }
+
+  <form [formGroup]="jobForm" (ngSubmit)="onSubmit()" class="job-form">
+    <!-- Basic Information Section -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2 class="section-title">Basic Information</h2>
+        <p class="section-description">Essential details about the job position</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="title" class="form-label">
+            Job Title <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="title"
+            formControlName="title"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('title')"
+            placeholder="e.g., Senior Software Engineer"
+          />
+          @if (isFieldInvalid('title')) {
+            <div class="error-message">{{ getFieldError('title') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="companyName" class="form-label">
+            Company Name <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="companyName"
+            formControlName="companyName"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('companyName')"
+            placeholder="e.g., Tech Solutions Inc."
+          />
+          @if (isFieldInvalid('companyName')) {
+            <div class="error-message">{{ getFieldError('companyName') }}</div>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description" class="form-label">
+          Job Description <span class="required">*</span>
+        </label>
+        <textarea
+          id="description"
+          formControlName="description"
+          class="form-control textarea"
+          [class.invalid]="isFieldInvalid('description')"
+          rows="6"
+          placeholder="Describe the role, responsibilities, and requirements..."
+        ></textarea>
+        @if (isFieldInvalid('description')) {
+          <div class="error-message">{{ getFieldError('description') }}</div>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="location" class="form-label">
+            Location <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="location"
+            formControlName="location"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('location')"
+            placeholder="e.g., Cairo, Egypt or Remote"
+          />
+          @if (isFieldInvalid('location')) {
+            <div class="error-message">{{ getFieldError('location') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="salaryRange" class="form-label">
+            Salary Range <span class="required">*</span>
+          </label>
+          <input
+            type="text"
+            id="salaryRange"
+            formControlName="salaryRange"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('salaryRange')"
+            placeholder="e.g., $80,000 - $120,000"
+          />
+          @if (isFieldInvalid('salaryRange')) {
+            <div class="error-message">{{ getFieldError('salaryRange') }}</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Details Section -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2 class="section-title">Job Details</h2>
+        <p class="section-description">Classification and requirements</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="jobStatus" class="form-label">
+            Job Status <span class="required">*</span>
+          </label>
+          <select
+            id="jobStatus"
+            formControlName="jobStatus"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('jobStatus')"
+          >
+            @for (status of jobStatuses; track status) {
+              <option [value]="status">{{ status }}</option>
+            }
+          </select>
+          @if (isFieldInvalid('jobStatus')) {
+            <div class="error-message">{{ getFieldError('jobStatus') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="experienceLevel" class="form-label">
+            Experience Level <span class="required">*</span>
+          </label>
+          <select
+            id="experienceLevel"
+            formControlName="experienceLevel"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('experienceLevel')"
+          >
+            @for (level of experienceLevels; track level) {
+              <option [value]="level">{{ level }}</option>
+            }
+          </select>
+          @if (isFieldInvalid('experienceLevel')) {
+            <div class="error-message">{{ getFieldError('experienceLevel') }}</div>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="employmentType" class="form-label">
+            Employment Type <span class="required">*</span>
+          </label>
+          <select
+            id="employmentType"
+            formControlName="employmentType"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('employmentType')"
+          >
+            @for (type of employmentTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+          @if (isFieldInvalid('employmentType')) {
+            <div class="error-message">{{ getFieldError('employmentType') }}</div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="applicationDeadline" class="form-label">
+            Application Deadline <span class="required">*</span>
+          </label>
+          <input
+            type="datetime-local"
+            id="applicationDeadline"
+            formControlName="applicationDeadline"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('applicationDeadline')"
+          />
+          @if (isFieldInvalid('applicationDeadline')) {
+            <div class="error-message">{{ getFieldError('applicationDeadline') }}</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Required Skills Section -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2 class="section-title">Required Skills</h2>
+        <p class="section-description">Search and select the skills required for this position</p>
+      </div>
+
+      @if (loadingSkills()) {
+        <div class="loading-skills">
+          <div class="spinner"></div>
+          <span>Loading available skills...</span>
+        </div>
+      } @else if (availableSkills().length === 0) {
+        <div class="no-skills">
+          <i class="bi bi-info-circle"></i>
+          <span>No skills available. You can create the job without skills.</span>
+        </div>
+      } @else {
+        <!-- Search Input -->
+        <div class="skill-search-container">
+          <div class="search-input-wrapper">
+            <i class="bi bi-search search-icon"></i>
+            <input
+              type="text"
+              class="form-control search-input"
+              placeholder="Search skills by name or description..."
+              [value]="skillSearchQuery()"
+              (input)="onSkillSearchChange($any($event.target).value)"
+              (focus)="onSkillSearchFocus()"
+              (blur)="closeSkillDropdown()"
+            />
+            @if (skillSearchQuery()) {
+              <button 
+                class="clear-search-btn" 
+                type="button"
+                (click)="onSkillSearchChange('')"
+              >
+                <i class="bi bi-x-circle-fill"></i>
+              </button>
+            }
+          </div>
+
+          <!-- Search Results Dropdown -->
+          @if (showSkillDropdown() && skillSearchQuery()) {
+            <div class="skill-dropdown">
+              @if (filteredSkills().length === 0) {
+                <div class="no-results">
+                  <i class="bi bi-search"></i>
+                  <span>No skills found matching "{{ skillSearchQuery() }}"</span>
+                </div>
+              } @else {
+                <div class="skill-dropdown-list">
+                  @for (skill of filteredSkills().slice(0, 10); track skill.id) {
+                    <div 
+                      class="skill-dropdown-item"
+                      [class.already-selected]="isSkillSelected(skill.id)"
+                      (click)="addSkill(skill)"
+                    >
+                      <div class="skill-item-content">
+                        <div class="skill-item-title">{{ skill.title }}</div>
+                        <div class="skill-item-description">{{ skill.description }}</div>
+                      </div>
+                      @if (isSkillSelected(skill.id)) {
+                        <i class="bi bi-check-circle-fill selected-icon"></i>
+                      } @else {
+                        <i class="bi bi-plus-circle add-icon"></i>
+                      }
+                    </div>
+                  }
+                  @if (filteredSkills().length > 10) {
+                    <div class="more-results">
+                      +{{ filteredSkills().length - 10 }} more results. Keep typing to refine search.
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Selected Skills Display -->
+        @if (selectedSkills().length > 0) {
+          <div class="selected-skills-section">
+            <div class="selected-skills-header">
+              <h3 class="selected-skills-title">
+                <i class="bi bi-check-circle-fill"></i>
+                Selected Skills ({{ selectedSkills().length }})
+              </h3>
+            </div>
+            <div class="selected-skills-list">
+              @for (skill of selectedSkills(); track skill.id) {
+                <div class="selected-skill-chip">
+                  <div class="skill-chip-content">
+                    <span class="skill-chip-title">{{ skill.title }}</span>
+                    <span class="skill-chip-description">{{ skill.description }}</span>
+                  </div>
+                  <button 
+                    type="button"
+                    class="remove-skill-btn"
+                    (click)="removeSkill(skill.id)"
+                    title="Remove skill"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="no-skills-selected">
+            <i class="bi bi-info-circle"></i>
+            <span>No skills selected yet. Use the search above to add skills.</span>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Exam Configuration Section -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2 class="section-title">Exam Configuration</h2>
+        <p class="section-description">Set up the technical assessment</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="examDurationMinutes" class="form-label">
+            Exam Duration (minutes) <span class="required">*</span>
+          </label>
+          <input
+            type="number"
+            id="examDurationMinutes"
+            formControlName="examDurationMinutes"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('examDurationMinutes')"
+            min="10"
+            max="120"
+            placeholder="40"
+          />
+          @if (isFieldInvalid('examDurationMinutes')) {
+            <div class="error-message">{{ getFieldError('examDurationMinutes') }}</div>
+          }
+          <small class="form-help">Between 10-120 minutes</small>
+        </div>
+
+        <div class="form-group">
+          <label for="numberOfQuestions" class="form-label">
+            Number of Questions <span class="required">*</span>
+          </label>
+          <input
+            type="number"
+            id="numberOfQuestions"
+            formControlName="numberOfQuestions"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('numberOfQuestions')"
+            min="1"
+            max="100"
+            placeholder="40"
+          />
+          @if (isFieldInvalid('numberOfQuestions')) {
+            <div class="error-message">{{ getFieldError('numberOfQuestions') }}</div>
+          }
+          <small class="form-help">Between 1-100 questions</small>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="atsMinimumScore" class="form-label">
+            ATS Minimum Score (%) <span class="required">*</span>
+          </label>
+          <input
+            type="number"
+            id="atsMinimumScore"
+            formControlName="atsMinimumScore"
+            class="form-control"
+            [class.invalid]="isFieldInvalid('atsMinimumScore')"
+            min="0"
+            max="100"
+            placeholder="0"
+          />
+          @if (isFieldInvalid('atsMinimumScore')) {
+            <div class="error-message">{{ getFieldError('atsMinimumScore') }}</div>
+          }
+          <small class="form-help">Minimum score for ATS to pass applicants (0-100)</small>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                formControlName="isExamGeneratedByAi"
+                class="checkbox-input"
+              />
+              <span class="checkbox-text">
+                <strong>Generate Exam by AI</strong>
+                <small>Automatically create exam questions using AI</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="checkbox-group mt-3">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                formControlName="autoSend"
+                class="checkbox-input"
+              />
+              <span class="checkbox-text">
+                <strong>Auto-send to Qualified Applicants</strong>
+                <small>Automatically send job to matching candidates</small>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn-cancel"
+        (click)="onCancel()"
+        [disabled]="submitting()"
+      >
+        <i class="bi bi-x-circle me-2"></i>
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn btn-submit"
+        [disabled]="submitting() || jobForm.invalid"
+      >
+        @if (submitting()) {
+          <span class="spinner-small"></span>
+          <span>Creating Job...</span>
+        } @else {
+          <i class="bi bi-check-circle me-2"></i>
+          <span>Create Job</span>
+        }
+      </button>
+    </div>
+  </form>
+
+  <!-- Success Dialog -->
+  @if (showSuccessDialog()) {
+    <div class="modal-overlay" (click)="closeSuccessDialog()">
+      <div class="success-dialog" (click)="$event.stopPropagation()">
+        <div class="success-icon">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <h3 class="success-title">Job Created Successfully!</h3>
+        <p class="success-message">
+          Your job posting has been created and is now live. Redirecting to job details...
+        </p>
+        <button class="btn btn-primary" (click)="closeSuccessDialog()">
+          View Jobs
+        </button>
+      </div>
+    </div>
+  }
+</div>

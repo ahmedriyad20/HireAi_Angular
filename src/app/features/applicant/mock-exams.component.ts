@@ -1,9 +1,8 @@
 ﻿import { Component, signal, OnInit, inject, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { StatusTagComponent } from '../../shared/components/status-tag.component';
 import { MockExamsService, MockExamQuickStats, MockExam as ApiMockExam } from '../../core/services/mock-exams.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface MockExam extends ApiMockExam {
   id: number;
@@ -12,23 +11,26 @@ interface MockExam extends ApiMockExam {
 @Component({
   selector: 'app-mock-exams',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, StatusTagComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './mock-exams.component.html',
   styleUrls: ['./mock-exams.component.css']
 })
 export class MockExamsComponent implements OnInit {
   private mockExamsService = inject(MockExamsService);
+  authService = inject(AuthService);
   
   selectedCategory = 'all';
   selectedDifficulty = 'all';
   
   quickStats = signal<MockExamQuickStats | null>(null);
   isLoadingStats = signal<boolean>(true);
+  statsError = signal<string | null>(null);
 
   recommendedExams = signal<MockExam[]>([]);
   allExamsData = signal<MockExam[]>([]);
   isLoadingExams = signal<boolean>(true);
   isLoadingMoreExams = signal<boolean>(false);
+  examsError = signal<string | null>(null);
 
   filteredRecommendedExams = signal<MockExam[]>([]);
   displayedAllExams = signal<MockExam[]>([]);
@@ -41,14 +43,19 @@ export class MockExamsComponent implements OnInit {
   @ViewChild('scrollContainer') scrollContainer?: ElementRef;
 
   ngOnInit() {
-    // TODO: Replace with actual applicant ID from auth service
-    const applicantId = '2'; // Changed to test with applicantId = 2
+    const userId = this.authService.getUserId();
+    if (!userId) {
+      console.error('User ID not found');
+      return;
+    }
+    const applicantId = userId;
     this.loadQuickStats(applicantId);
     this.loadMockExams(applicantId);
   }
 
   loadQuickStats(applicantId: string) {
     this.isLoadingStats.set(true);
+    this.statsError.set(null);
     this.mockExamsService.getQuickStats(applicantId).subscribe({
       next: (stats) => {
         this.quickStats.set(stats);
@@ -56,13 +63,13 @@ export class MockExamsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading quick stats:', error);
-        // Set mock data as fallback for development
-        this.quickStats.set({
-          mockExamsTakenNumber: 4,
-          mockExamsTakenNumberForCurrentMonth: 1,
-          averageExamsTakenScore: 85,
-          averageExamsTakenScoreImprovement: 13
-        });
+        if (error.status === 403) {
+          this.statsError.set('Access denied. You do not have permission to view these statistics.');
+        } else if (error.status === 401) {
+          this.statsError.set('Your session has expired. Please login again.');
+        } else {
+          this.statsError.set('Failed to load statistics. Please try again later.');
+        }
         this.isLoadingStats.set(false);
       }
     });
@@ -70,6 +77,7 @@ export class MockExamsComponent implements OnInit {
 
   loadMockExams(applicantId: string) {
     this.isLoadingExams.set(true);
+    this.examsError.set(null);
     console.log('Loading exams with applicantId:', applicantId);
     
     this.mockExamsService.getRecommendedMockExams(applicantId).subscribe({
@@ -84,7 +92,11 @@ export class MockExamsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading recommended exams:', error);
-        console.error('URL attempted: http://localhost:5290/api/Exam/RecommendedMockExams/' + applicantId);
+        if (error.status === 403) {
+          this.examsError.set('Access denied. You do not have permission to view these exams.');
+        } else if (error.status === 401) {
+          this.examsError.set('Your session has expired. Please login again.');
+        }
       }
     });
 
@@ -104,7 +116,13 @@ export class MockExamsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading all exams:', error);
-        console.error('URL attempted: http://localhost:5290/api/Exam/AllMockExams/' + applicantId);
+        if (error.status === 403) {
+          this.examsError.set('Access denied. You do not have permission to view these exams.');
+        } else if (error.status === 401) {
+          this.examsError.set('Your session has expired. Please login again.');
+        } else {
+          this.examsError.set('Failed to load exams. Please try again later.');
+        }
         this.isLoadingExams.set(false);
       }
     });

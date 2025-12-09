@@ -10,6 +10,7 @@ export interface ApplicationResponse {
   appliedAt: string;
   atsScore: number;
   applicationStatus: string;
+  jobType: string;
 }
 
 @Injectable({
@@ -17,10 +18,19 @@ export interface ApplicationResponse {
 })
 export class ApplicationsService {
   private apiUrl = 'http://localhost:5290/api/ApplicantDashboard';
+  private applicationApiUrl = 'http://localhost:5290/api/Application';
 
   constructor(private http: HttpClient) {}
 
   getApplicationsList(applicantId: number): Observable<ApplicationResponse[]> {
     return this.http.get<ApplicationResponse[]>(`${this.apiUrl}/${applicantId}/Applications`);
+  }
+
+  getApplicationById(applicationId: number): Observable<any> {
+    return this.http.get<any>(`${this.applicationApiUrl}/${applicationId}`);
+  }
+
+  deleteApplication(applicationId: number): Observable<void> {
+    return this.http.delete<void>(`${this.applicationApiUrl}/${applicationId}`);
   }
 }

@@ -7,7 +7,31 @@
     </div>
   </div>
 
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading applications...</span>
+      </div>
+      <p class="text-muted mt-3">Loading your applications...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error() && !isLoading()) {
+    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+      <div class="flex-grow-1">
+        <strong>Error:</strong> {{ error() }}
+      </div>
+      <button class="btn btn-sm btn-outline-danger" (click)="loadApplications()">
+        <i class="bi bi-arrow-clockwise"></i> Retry
+      </button>
+    </div>
+  }
+
   <!-- Stats Overview -->
+  @if (!isLoading() && !error()) {
   <div class="row g-3 mb-4">
     <div class="col-md-3">
       <div class="card quick-stat-card">
@@ -75,25 +99,37 @@
   <div class="card mb-4">
     <div class="card-body">
       <div class="row g-3 align-items-end">
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label class="form-label">Status</label>
           <select class="form-select" [(ngModel)]="filterStatus" (change)="applyFilters()">
             <option value="all">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="in-progress">In Progress</option>
-            <option value="interview">Interview</option>
-            <option value="accepted">Accepted</option>
-            <option value="rejected">Rejected</option>
+            <option value="ExamSent">Exam Sent</option>
+            <option value="ATSPassed">ATS Passed</option>
+            <option value="UnderReview">Under Review</option>
+            <option value="Completed">Completed</option>
+            <option value="Rejected">Rejected</option>
           </select>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
           <label class="form-label">Job Type</label>
           <select class="form-select" [(ngModel)]="filterJobType" (change)="applyFilters()">
             <option value="all">All Types</option>
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
+            <option value="FullTime">Full Time</option>
+            <option value="PartTime">Part Time</option>
             <option value="Internship">Internship</option>
+            <option value="FreeLance">Freelance</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Applied Date</label>
+          <select class="form-select" [(ngModel)]="filterDate" (change)="applyFilters()">
+            <option value="all">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">Last 7 Days</option>
+            <option value="month">Last 30 Days</option>
+            <option value="3months">Last 3 Months</option>
+            <option value="6months">Last 6 Months</option>
+            <option value="year">Last Year</option>
           </select>
         </div>
         <div class="col-md-3">
@@ -131,10 +167,27 @@
                 <i class="bi bi-building"></i>
                 {{ app.company }}
               </p>
-              <p class="text-muted small mb-0">
+              <p class="text-muted small mb-1">
                 <i class="bi bi-geo-alt"></i>
                 {{ app.location }}
               </p>
+              <div class="d-flex gap-2 align-items-center">
+                <span class="badge" 
+                      [class.bg-primary]="app.jobType === 'FullTime'"
+                      [class.bg-info]="app.jobType === 'PartTime'"
+                      [class.bg-warning]="app.jobType === 'Internship'"
+                      [class.bg-success]="app.jobType === 'FreeLance'">
+                  <i class="bi" 
+                     [class.bi-briefcase-fill]="app.jobType === 'FullTime'"
+                     [class.bi-clock-fill]="app.jobType === 'PartTime'"
+                     [class.bi-mortarboard-fill]="app.jobType === 'Internship'"
+                     [class.bi-person-workspace]="app.jobType === 'FreeLance'"></i>
+                  {{ app.jobType === 'FullTime' ? 'Full Time' : 
+                     app.jobType === 'PartTime' ? 'Part Time' : 
+                     app.jobType === 'FreeLance' ? 'Freelance' : 
+                     app.jobType }}
+                </span>
+              </div>
             </div>
 
             <!-- Application Details -->
@@ -170,10 +223,33 @@
                 <app-status-tag [status]="app.status"></app-status-tag>
               </div>
               
-              <button class="btn btn-sm btn-outline-primary w-100" (click)="viewApplicationDetails(app)">
-                <i class="bi bi-eye"></i>
-                View Details
-              </button>
+              <!-- Action Buttons -->
+              <div class="d-flex gap-2 mb-2">
+                <button class="btn btn-sm btn-outline-primary flex-grow-1" (click)="viewApplicationDetails(app)">
+                  <i class="bi bi-eye"></i>
+                  View Details
+                </button>
+                
+                <!-- Take Exam Button (only for ATSPassed) -->
+                @if (shouldShowTakeExam(app.status)) {
+                  <button class="btn btn-sm btn-success flex-grow-1" (click)="takeExam(app)">
+                    <i class="bi bi-pencil-square"></i>
+                    Take Exam
+                  </button>
+                }
+              </div>
+
+              <!-- Withdraw/Delete Button -->
+              @if (shouldShowWithdraw(app.status) || shouldShowDelete(app.status)) {
+                <button 
+                  class="btn btn-sm w-100"
+                  [class.btn-outline-danger]="shouldShowWithdraw(app.status)"
+                  [class.btn-danger]="shouldShowDelete(app.status)"
+                  (click)="deleteApplication(app, $event)">
+                  <i class="bi bi-trash"></i>
+                  {{ getDeleteButtonText(app.status) }}
+                </button>
+              }
             </div>
           </div>
         </div>
@@ -191,4 +267,55 @@
       </button>
     </div>
   }
+  }
 </div>
+
+<!-- Delete/Withdraw Confirmation Modal -->
+@if (showDeleteModal()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+            Confirm Action
+          </h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Are you sure you want to <strong>{{ deleteActionText().toLowerCase() }}</strong>?</p>
+          @if (applicationToDelete()) {
+            <div class="alert alert-light border mt-3">
+              <div class="d-flex align-items-start">
+                <i [class]="'bi ' + getJobIcon(applicationToDelete()!.jobTitle) + ' me-3 text-primary'" style="font-size: 1.5rem;"></i>
+                <div>
+                  <h6 class="mb-1">{{ applicationToDelete()!.jobTitle }}</h6>
+                  <p class="text-muted small mb-0">
+                    <i class="bi bi-building me-1"></i>{{ applicationToDelete()!.company }}
+                  </p>
+                  <p class="text-muted small mb-0">
+                    <i class="bi bi-calendar me-1"></i>Applied on {{ applicationToDelete()!.appliedDate }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+          <p class="text-danger small mb-0">
+            <i class="bi bi-info-circle me-1"></i>
+            This action cannot be undone.
+          </p>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()">
+            <i class="bi bi-x-circle me-1"></i>
+            Cancel
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()">
+            <i class="bi bi-trash me-1"></i>
+            {{ deleteActionText() }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

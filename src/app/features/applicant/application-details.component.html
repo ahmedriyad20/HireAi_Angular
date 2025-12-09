@@ -308,15 +308,11 @@
                   Start Exam
                 </button>
               }
-              <button class="btn btn-outline-primary">
-                <i class="bi bi-file-earmark-pdf me-2"></i>
-                View Job Description
+              <button class="btn btn-outline-primary" (click)="viewJobDetails()">
+                <i class="bi bi-file-earmark-text me-2"></i>
+                View Job Details
               </button>
-              <button class="btn btn-outline-secondary">
-                <i class="bi bi-chat-dots me-2"></i>
-                Contact HR
-              </button>
-              <button class="btn btn-outline-danger">
+              <button class="btn btn-outline-danger" (click)="openDeleteModal()">
                 <i class="bi bi-x-circle me-2"></i>
                 Withdraw Application
               </button>
@@ -327,3 +323,38 @@
     </div>
   }
 </div>
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteModal()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+            Confirm Withdrawal
+          </h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()" [disabled]="isDeleting()"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0">Are you sure you want to withdraw your application for <strong>{{ applicationDetails()?.jobTitle }}</strong>?</p>
+          <p class="text-muted small mb-0 mt-2">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()" [disabled]="isDeleting()">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-danger" (click)="confirmWithdrawApplication()" [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Withdrawing...
+            } @else {
+              <i class="bi bi-trash me-2"></i>
+              Withdraw Application
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

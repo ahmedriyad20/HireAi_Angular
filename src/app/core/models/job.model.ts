@@ -20,12 +20,18 @@ export enum EmploymentType {
   FreeLance = 'FreeLance'
 }
 
+export interface Skill {
+  id: number;
+  title: string;
+  description: string;
+}
+
 export interface JobOpening {
   id?: number;
   title: string;
   companyName: string;
   description?: string;
-  createdAt: Date;
+  createdAt: Date | string;
   jobStatus: JobStatus;
   examDurationMinutes?: number;
   experienceLevel?: ExperienceLevel;
@@ -33,8 +39,14 @@ export interface JobOpening {
   location?: string;
   salaryRange?: string;
   numberOfQuestions?: number;
-  applicationDeadline?: Date;
+  applicationDeadline?: Date | string;
   atsMinimumScore?: number;
+  autoSend?: boolean;
+  hrId?: number;
+  skills?: Skill[];
+  updatedAt?: Date | string | null;
+  totalApplications?: number;
+  examsCompleted?: number;
 }
 
 export interface JobFilters {

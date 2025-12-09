@@ -67,9 +67,9 @@
           }
 
           <form (ngSubmit)="handleRegister()" #registerForm="ngForm">
-            <!-- Name -->
+            <!-- Full Name -->
             <div class="mb-3">
-              <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+              <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-transparent">
                   <i class="bi bi-person"></i>
@@ -77,9 +77,9 @@
                 <input 
                   type="text" 
                   class="form-control" 
-                  id="name"
-                  name="name"
-                  [(ngModel)]="formData.name"
+                  id="fullName"
+                  name="fullName"
+                  [(ngModel)]="formData.fullName"
                   placeholder="Enter your full name"
                   required>
               </div>
@@ -105,7 +105,7 @@
 
             <!-- Phone -->
             <div class="mb-3">
-              <label for="phone" class="form-label">Phone Number</label>
+              <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-transparent">
                   <i class="bi bi-telephone"></i>
@@ -116,13 +116,50 @@
                   id="phone"
                   name="phone"
                   [(ngModel)]="formData.phone"
-                  placeholder="+1 (555) 000-0000">
+                  placeholder="+1234567890"
+                  required>
+              </div>
+              <small class="text-muted">Format: +1234567890 (no spaces or dashes)</small>
+            </div>
+
+            <!-- Address -->
+            <div class="mb-3">
+              <label for="address" class="form-label">Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-house"></i>
+                </span>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  id="address"
+                  name="address"
+                  [(ngModel)]="formData.address"
+                  placeholder="Enter your address"
+                  required>
+              </div>
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="mb-3">
+              <label for="dateOfBirth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent">
+                  <i class="bi bi-calendar"></i>
+                </span>
+                <input 
+                  type="date" 
+                  class="form-control" 
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  [(ngModel)]="formData.dateOfBirth"
+                  required>
               </div>
             </div>
 
             <!-- Title -->
             <div class="mb-3">
-              <label for="title" class="form-label">Job Title/Position</label>
+              <label for="title" class="form-label">Job Title/Position <span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-transparent">
                   <i class="bi bi-briefcase"></i>
@@ -133,7 +170,8 @@
                   id="title"
                   name="title"
                   [(ngModel)]="formData.title"
-                  placeholder="e.g. Software Engineer">
+                  placeholder="e.g. Software Engineer"
+                  required>
               </div>
             </div>
 
@@ -203,7 +241,7 @@
                   class="form-control" 
                   id="confirmPassword"
                   name="confirmPassword"
-                  [(ngModel)]="confirmPassword"
+                  [(ngModel)]="formData.confirmPassword"
                   placeholder="Re-enter your password"
                   required>
                 <button 

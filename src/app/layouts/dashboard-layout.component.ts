@@ -1,8 +1,10 @@
-﻿import { Component, signal, OnInit } from '@angular/core';
+﻿import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SidebarComponent, MenuItem } from '../shared/components/sidebar.component';
 import { HeaderComponent, User } from '../shared/components/header.component';
+import { AuthService } from '../core/services/auth.service';
+import { ApplicantProfileService } from '../core/services/applicant-profile.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -16,26 +18,25 @@ export class DashboardLayoutComponent implements OnInit {
   notificationCount = signal(3);
   
   user = signal<User>({
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'HR Manager'
+    name: 'Loading...',
+    email: '',
+    role: ''
   });
 
   menuSections = signal<{ title: string; items: MenuItem[] }[]>([]);
+  private authService = inject(AuthService);
+  private profileService = inject(ApplicantProfileService);
 
   constructor(private router: Router) {}
 
   ngOnInit() {
     // Determine user role based on current route
     const isApplicant = this.router.url.includes('/applicant');
+    const userRole = this.authService.getUserRole();
+    const userId = this.authService.getUserId();
     
     if (isApplicant) {
-      this.user.set({
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@example.com',
-        role: 'Applicant'
-      });
-      
+      // Set menu items for applicant
       this.menuSections.set([
         {
           title: 'Main',
@@ -50,17 +51,39 @@ export class DashboardLayoutComponent implements OnInit {
           title: 'Account',
           items: [
             { label: 'My Profile', icon: 'person-circle', route: '/applicant/profile' },
-            { label: 'Settings', icon: 'gear', route: '/applicant/settings' },
+            { label: 'Account Settings', icon: 'gear', route: '/applicant/settings' },
           ]
         }
       ]);
+
+      // Fetch applicant profile data
+      if (userId) {
+        this.profileService.getApplicantProfile(parseInt(userId, 10)).subscribe({
+          next: (profile) => {
+            this.user.set({
+              name: profile.name || 'User',
+              email: profile.email || '',
+              role: 'Applicant'
+            });
+          },
+          error: (error) => {
+            console.error('Error loading user profile:', error);
+            this.user.set({
+              name: 'Applicant',
+              email: '',
+              role: 'Applicant'
+            });
+          }
+        });
+      } else {
+        this.user.set({
+          name: 'Applicant',
+          email: '',
+          role: 'Applicant'
+        });
+      }
     } else {
-      this.user.set({
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'HR Manager'
-      });
-      
+      // Set menu items for HR
       this.menuSections.set([
         {
           title: 'Main',
@@ -81,16 +104,24 @@ export class DashboardLayoutComponent implements OnInit {
         {
           title: 'Account',
           items: [
-            { label: 'Settings', icon: 'gear', route: '/hr/settings' },
+            { label: 'Account Settings', icon: 'gear', route: '/hr/settings' },
             { label: 'Billing', icon: 'credit-card', route: '/hr/billing' },
           ]
         }
       ]);
+
+      // For HR users, we'll use default for now (can be extended later with HR profile service)
+      this.user.set({
+        name: 'HR Manager',
+        email: '',
+        role: 'HR Manager'
+      });
     }
   }
 
   handleLogout() {
     console.log('Logout clicked');
-    this.router.navigate(['/']);
+    this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 }

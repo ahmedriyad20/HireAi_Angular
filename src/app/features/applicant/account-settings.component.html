@@ -1,0 +1,315 @@
+<div class="account-settings-container animate-fade-in">
+  <!-- Hero Header -->
+  <div class="hero-header">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <i class="bi bi-gear"></i>
+        Account Settings
+      </h1>
+      <p class="hero-subtitle">Manage your account security and preferences</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="settings-content">
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'password'"
+        (click)="setActiveTab('password')">
+        <i class="bi bi-lock"></i>
+        Change Password
+      </button>
+      <button 
+        class="tab-button"
+        [class.active]="activeTab() === 'email'"
+        (click)="setActiveTab('email')">
+        <i class="bi bi-envelope"></i>
+        Change Email
+      </button>
+      <button 
+        class="tab-button danger"
+        [class.active]="activeTab() === 'delete'"
+        (click)="setActiveTab('delete')">
+        <i class="bi bi-trash"></i>
+        Delete Account
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+      
+      <!-- Change Password Tab -->
+      @if (activeTab() === 'password') {
+        <div class="tab-panel animate-fade-in">
+          <div class="panel-header">
+            <h2><i class="bi bi-lock"></i> Change Password</h2>
+            <p>Update your password to keep your account secure</p>
+          </div>
+
+          @if (passwordSuccess()) {
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle"></i>
+              {{ passwordSuccess() }}
+            </div>
+          }
+
+          @if (passwordError()) {
+            <div class="alert alert-error">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ passwordError() }}
+            </div>
+          }
+
+          <form (ngSubmit)="onChangePassword()" #passwordFormRef="ngForm">
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input
+                type="password"
+                id="currentPassword"
+                name="currentPassword"
+                class="form-control"
+                [(ngModel)]="passwordForm.currentPassword"
+                placeholder="Enter your current password"
+                required
+                [disabled]="loadingPassword()"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input
+                type="password"
+                id="newPassword"
+                name="newPassword"
+                class="form-control"
+                [(ngModel)]="passwordForm.newPassword"
+                placeholder="Enter your new password"
+                required
+                [disabled]="loadingPassword()"
+              />
+              <small class="form-hint">Must be at least 4 characters long</small>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmNewPassword">Confirm New Password</label>
+              <input
+                type="password"
+                id="confirmNewPassword"
+                name="confirmNewPassword"
+                class="form-control"
+                [(ngModel)]="passwordForm.confirmNewPassword"
+                placeholder="Confirm your new password"
+                required
+                [disabled]="loadingPassword()"
+              />
+            </div>
+
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="loadingPassword() || !passwordFormRef.form.valid">
+                @if (loadingPassword()) {
+                  <span class="spinner"></span>
+                  Changing Password...
+                } @else {
+                  <i class="bi bi-check-lg"></i>
+                  Change Password
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Change Email Tab -->
+      @if (activeTab() === 'email') {
+        <div class="tab-panel animate-fade-in">
+          <div class="panel-header">
+            <h2><i class="bi bi-envelope"></i> Change Email Address</h2>
+            <p>Update your email address for account communication</p>
+          </div>
+
+          @if (emailSuccess()) {
+            <div class="alert alert-success">
+              <i class="bi bi-check-circle"></i>
+              {{ emailSuccess() }}
+            </div>
+          }
+
+          @if (emailError()) {
+            <div class="alert alert-error">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ emailError() }}
+            </div>
+          }
+
+          <form (ngSubmit)="onChangeEmail()" #emailFormRef="ngForm">
+            <div class="form-group">
+              <label for="newEmail">New Email Address</label>
+              <input
+                type="email"
+                id="newEmail"
+                name="newEmail"
+                class="form-control"
+                [(ngModel)]="emailForm.newEmail"
+                placeholder="Enter your new email address"
+                required
+                [disabled]="loadingEmail()"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="confirmNewEmail">Confirm New Email</label>
+              <input
+                type="email"
+                id="confirmNewEmail"
+                name="confirmNewEmail"
+                class="form-control"
+                [(ngModel)]="emailForm.confirmNewEmail"
+                placeholder="Confirm your new email address"
+                required
+                [disabled]="loadingEmail()"
+              />
+            </div>
+
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="loadingEmail() || !emailFormRef.form.valid">
+                @if (loadingEmail()) {
+                  <span class="spinner"></span>
+                  Changing Email...
+                } @else {
+                  <i class="bi bi-check-lg"></i>
+                  Change Email
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+      <!-- Delete Account Tab -->
+      @if (activeTab() === 'delete') {
+        <div class="tab-panel animate-fade-in">
+          <div class="panel-header danger">
+            <h2><i class="bi bi-exclamation-triangle"></i> Delete Account</h2>
+            <p>Permanently delete your account and all associated data</p>
+          </div>
+
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Warning:</strong> This action cannot be undone. All your data will be permanently deleted.
+          </div>
+
+          @if (deleteError()) {
+            <div class="alert alert-error">
+              <i class="bi bi-exclamation-circle"></i>
+              {{ deleteError() }}
+            </div>
+          }
+
+          <form (ngSubmit)="openDeleteConfirmation()" #deleteFormRef="ngForm">
+            <div class="form-group">
+              <label for="deletePassword">Confirm Your Password</label>
+              <input
+                type="password"
+                id="deletePassword"
+                name="deletePassword"
+                class="form-control"
+                [(ngModel)]="deleteForm.password"
+                placeholder="Enter your password to confirm"
+                required
+                [disabled]="loadingDelete()"
+              />
+              <small class="form-hint">Enter your password to proceed with account deletion</small>
+            </div>
+
+            <div class="form-actions">
+              <button 
+                type="submit" 
+                class="btn btn-danger"
+                [disabled]="loadingDelete() || !deleteFormRef.form.valid">
+                <i class="bi bi-trash"></i>
+                Delete Account
+              </button>
+            </div>
+          </form>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirmation()) {
+  <div class="modal-overlay" (click)="closeDeleteConfirmation()">
+    <div class="modal-content animate-scale-in" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="bi bi-exclamation-triangle"></i> Confirm Account Deletion</h3>
+        <button class="modal-close" (click)="closeDeleteConfirmation()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="warning-text">
+          <strong>This action is irreversible!</strong> All your data including:
+        </p>
+        <ul class="deletion-list">
+          <li>Profile information</li>
+          <li>Job applications</li>
+          <li>Saved jobs and preferences</li>
+          <li>Mock exam history</li>
+        </ul>
+        <p class="warning-text">will be permanently deleted.</p>
+
+        @if (deleteError()) {
+          <div class="alert alert-error">
+            <i class="bi bi-exclamation-circle"></i>
+            {{ deleteError() }}
+          </div>
+        }
+
+        <div class="form-group">
+          <label for="confirmDelete">Type <strong>DELETE</strong> to confirm</label>
+          <input
+            type="text"
+            id="confirmDelete"
+            name="confirmDelete"
+            class="form-control"
+            [(ngModel)]="deleteForm.confirmText"
+            placeholder="Type DELETE"
+            required
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button 
+          class="btn btn-secondary" 
+          (click)="closeDeleteConfirmation()"
+          [disabled]="loadingDelete()">
+          Cancel
+        </button>
+        <button 
+          class="btn btn-danger" 
+          (click)="onDeleteAccount()"
+          [disabled]="loadingDelete() || deleteForm.confirmText !== 'DELETE'">
+          @if (loadingDelete()) {
+            <span class="spinner"></span>
+            Deleting...
+          } @else {
+            <i class="bi bi-trash"></i>
+            Delete My Account
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -24,6 +24,11 @@
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
+  } @else if (statsError()) {
+    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      <div>{{ statsError() }}</div>
+    </div>
   } @else if (quickStats()) {
     <div class="row g-3 mb-4">
       <div class="col-md-3">
@@ -94,6 +99,16 @@
     <div class="text-center py-4">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading exams...</span>
+      </div>
+    </div>
+  } @else if (examsError()) {
+    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      <div>
+        <strong>Error:</strong> {{ examsError() }}
+        <button class="btn btn-sm btn-outline-danger ms-3" (click)="loadMockExams(authService.getUserId()!)">
+          <i class="bi bi-arrow-clockwise"></i> Retry
+        </button>
       </div>
     </div>
   } @else {

@@ -1,168 +1,247 @@
-<div class="hr-dashboard">
-  <!-- Page Header -->
-  <div class="page-header mb-4">
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-subtitle">Welcome back! Here's your recruitment overview</p>
-  </div>
-
-  <!-- Stats Cards -->
-  <div class="row g-3 mb-4">
-    @for (stat of statsData(); track stat.label) {
-      <div class="col-md-6 col-xl-3">
-        <app-stat-card [data]="stat"></app-stat-card>
+<!-- Loading State -->
+@if (isLoading()) {
+  <div class="d-flex justify-content-center align-items-center" style="min-height: 400px;">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
-    }
+      <p class="text-muted">Loading dashboard data...</p>
+    </div>
   </div>
+}
 
-  <!-- Charts Row -->
-  <div class="row g-4 mb-4">
-    <!-- ATS Statistics Chart -->
-    <div class="col-lg-8">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">
-            <i class="bi bi-bar-chart me-2"></i>
-            ATS Performance Overview
-          </h5>
+<!-- Error State -->
+@else if (error()) {
+  <div class="alert alert-danger d-flex align-items-center gap-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+    <div class="flex-grow-1">
+      <strong>Error:</strong> {{ error() }}
+    </div>
+    <button class="btn btn-sm btn-outline-danger" (click)="retryLoad()">
+      <i class="bi bi-arrow-clockwise me-1"></i>
+      Retry
+    </button>
+  </div>
+}
+
+<!-- Dashboard Content -->
+@else if (dashboardData()) {
+  <div class="hr-dashboard">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Welcome back! Here's your recruitment overview</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+      @for (stat of statsData(); track stat.label) {
+        <div class="col-md-6 col-xl-3">
+          <app-stat-card [data]="stat"></app-stat-card>
         </div>
-        <div class="card-body">
-          <div class="chart-container" style="height: 300px;">
-            <canvas id="atsChart"></canvas>
+      }
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+      <!-- Monthly Applicants Chart -->
+      <div class="col-lg-4">
+        <div class="card chart-card">
+          <div class="card-body">
+            <div class="chart-container" style="height: 300px;">
+              <canvas #monthlyApplicantsChart></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATS Passed Rate Chart -->
+      <div class="col-lg-4">
+        <div class="card chart-card">
+          <div class="card-body">
+            <div class="chart-container" style="height: 300px;">
+              <canvas #atsPassedChart></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exam Score Distribution Chart -->
+      <div class="col-lg-4">
+        <div class="card chart-card">
+          <div class="card-body">
+            <div class="chart-container" style="height: 300px;">
+              <canvas #examScoreChart></canvas>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Exam Performance Distribution -->
-    <div class="col-lg-4">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">
-            <i class="bi bi-pie-chart me-2"></i>
-            Exam Results
-          </h5>
-        </div>
-        <div class="card-body">
-          <div class="chart-container" style="height: 300px;">
-            <canvas id="examChart"></canvas>
-          </div>
-        </div>
+    <!-- Tabbed Section -->
+    <div class="card">
+      <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link" 
+              [class.active]="activeTab() === 'recent'"
+              (click)="switchTab('recent')"
+              type="button"
+              role="tab">
+              <i class="bi bi-clock-history me-2"></i>
+              Recent Applications
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button 
+              class="nav-link" 
+              [class.active]="activeTab() === 'active'"
+              (click)="switchTab('active')"
+              type="button"
+              role="tab">
+              <i class="bi bi-briefcase me-2"></i>
+              Active Job Postings
+            </button>
+          </li>
+        </ul>
       </div>
-    </div>
-  </div>
 
-  <!-- Recent Applicants Table -->
-  <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <h5 class="card-title mb-0">
-        <i class="bi bi-people me-2"></i>
-        Recent Applicants
-      </h5>
-      <a [routerLink]="['/hr/applicants']" class="btn btn-sm btn-outline-primary">
-        View All
-        <i class="bi bi-arrow-right ms-1"></i>
-      </a>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead>
-            <tr>
-              <th>Applicant</th>
-              <th>Position</th>
-              <th>Applied Date</th>
-              <th>ATS Score</th>
-              <th>Exam Score</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (applicant of recentApplicants(); track applicant.id) {
-              <tr>
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="avatar-sm">{{ getInitials(applicant.name) }}</div>
-                    <div>
-                      <div class="fw-medium">{{ applicant.name }}</div>
-                      <small class="text-muted">{{ applicant.email }}</small>
-                    </div>
-                  </div>
-                </td>
-                <td>{{ applicant.position }}</td>
-                <td>{{ applicant.appliedDate }}</td>
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <div class="progress" style="width: 60px; height: 6px;">
-                      <div class="progress-bar" 
-                           [class.success]="applicant.atsScore >= 70"
-                           [class.warning]="applicant.atsScore >= 50 && applicant.atsScore < 70"
-                           [class.danger]="applicant.atsScore < 50"
-                           [style.width.%]="applicant.atsScore"></div>
-                    </div>
-                    <span class="fw-medium">{{ applicant.atsScore }}%</span>
-                  </div>
-                </td>
-                <td>
-                  @if (applicant.examScore !== null) {
-                    <span class="fw-medium">{{ applicant.examScore }}%</span>
-                  } @else {
-                    <span class="text-muted">-</span>
+      <div class="card-body p-0">
+        <!-- Recent Applications Tab -->
+        @if (activeTab() === 'recent') {
+          <div class="table-responsive">
+            @if (dashboardData()!.recentApplications.length > 0) {
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Applicant Name</th>
+                    <th>Position</th>
+                    <th>Applied On</th>
+                    <th>ATS Score</th>
+                    <th>Job Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (app of dashboardData()!.recentApplications; track app.applicantName) {
+                    <tr>
+                      <td>
+                        <div class="fw-medium">{{ app.applicantName }}</div>
+                      </td>
+                      <td>{{ app.position }}</td>
+                      <td>
+                        <small class="text-muted">{{ formatDate(app.appliedOn) }}</small>
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress" style="width: 60px; height: 6px;">
+                            <div class="progress-bar" 
+                                 [class.bg-success]="app.atsScore >= 70"
+                                 [class.bg-warning]="app.atsScore >= 50 && app.atsScore < 70"
+                                 [class.bg-danger]="app.atsScore < 50"
+                                 [style.width.%]="app.atsScore"></div>
+                          </div>
+                          <span class="fw-medium">{{ app.atsScore }}%</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge" 
+                              [class.bg-success]="app.jobStatus === 'Active'"
+                              [class.bg-secondary]="app.jobStatus !== 'Active'">
+                          {{ app.jobStatus }}
+                        </span>
+                      </td>
+                      <td>
+                        <div class="d-flex gap-2">
+                          @if (app.applicantCVlink) {
+                            <a [href]="app.applicantCVlink" 
+                               target="_blank"
+                               class="btn btn-sm btn-outline-primary" 
+                               title="View CV">
+                              <i class="bi bi-file-earmark-pdf me-1"></i>
+                              CV
+                            </a>
+                          }
+                          @if (app.examResultLink) {
+                            <a [href]="app.examResultLink" 
+                               target="_blank"
+                               class="btn btn-sm btn-outline-success" 
+                               title="View Exam Results">
+                              <i class="bi bi-clipboard-check me-1"></i>
+                              Exam
+                            </a>
+                          } @else {
+                            <span class="badge bg-light text-muted">No Exam</span>
+                          }
+                        </div>
+                      </td>
+                    </tr>
                   }
-                </td>
-                <td>
-                  <app-status-tag [status]="applicant.status"></app-status-tag>
-                </td>
-                <td>
-                  <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-ghost btn-icon" title="View Profile">
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-ghost btn-icon" title="Send Exam">
-                      <i class="bi bi-send"></i>
-                    </button>
-                    <button class="btn btn-sm btn-ghost btn-icon" title="Download CV">
-                      <i class="bi bi-download"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+                </tbody>
+              </table>
+            } @else {
+              <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No recent applications</p>
+              </div>
             }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+          </div>
+        }
 
-  <!-- Quick Actions -->
-  <div class="row g-3 mt-4">
-    <div class="col-md-6">
-      <div class="card hover-lift cursor-pointer" [routerLink]="['/hr/jobs/create']">
-        <div class="card-body d-flex align-items-center gap-3">
-          <div class="stat-icon primary">
-            <i class="bi bi-plus-circle"></i>
+        <!-- Active Job Postings Tab -->
+        @if (activeTab() === 'active') {
+          <div class="table-responsive">
+            @if (dashboardData()!.activeJobPostings.length > 0) {
+              <table class="table table-hover mb-0">
+                <thead>
+                  <tr>
+                    <th>Job Title</th>
+                    <th>Total Applications</th>
+                    <th>Exams Taken</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (job of dashboardData()!.activeJobPostings; track job.jobTitle) {
+                    <tr>
+                      <td>
+                        <div class="fw-medium">{{ job.jobTitle }}</div>
+                      </td>
+                      <td>
+                        <span class="badge bg-primary">{{ job.applicationTotalCount }}</span>
+                      </td>
+                      <td>
+                        <span class="badge bg-info">{{ job.takenExamCount }}</span>
+                      </td>
+                      <td>
+                        <span class="badge" 
+                              [class.bg-success]="job.jobStatus === 'Active'"
+                              [class.bg-secondary]="job.jobStatus !== 'Active'">
+                          {{ job.jobStatus }}
+                        </span>
+                      </td>
+                      <td>
+                        <a [routerLink]="job.jobPostLink" 
+                           class="btn btn-sm btn-outline-primary">
+                          <i class="bi bi-eye me-1"></i>
+                          View Details
+                        </a>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <div class="text-center py-5">
+                <i class="bi bi-briefcase display-1 text-muted"></i>
+                <p class="text-muted mt-3">No active job postings</p>
+              </div>
+            }
           </div>
-          <div>
-            <h6 class="mb-1">Post New Job</h6>
-            <p class="text-muted mb-0 small">Create a new job posting with AI exam</p>
-          </div>
-          <i class="bi bi-chevron-right ms-auto text-muted"></i>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card hover-lift cursor-pointer" [routerLink]="['/hr/analytics']">
-        <div class="card-body d-flex align-items-center gap-3">
-          <div class="stat-icon indigo">
-            <i class="bi bi-graph-up"></i>
-          </div>
-          <div>
-            <h6 class="mb-1">View Analytics</h6>
-            <p class="text-muted mb-0 small">Detailed recruitment insights and reports</p>
-          </div>
-          <i class="bi bi-chevron-right ms-auto text-muted"></i>
-        </div>
+        }
       </div>
     </div>
   </div>
-</div>
+}

@@ -299,12 +299,20 @@
                 <i class="bi bi-calendar3 me-1"></i>
                 Posted {{ job.createdAt | date:'MMM d, y' }}
               </div>
-              <button 
-                class="btn btn-primary"
-                (click)="applyForJob(job.id, $event)">
-                <i class="bi bi-send me-1"></i>
-                Apply Now
-              </button>
+              <div class="d-flex gap-2">
+                <button 
+                  class="btn btn-outline-primary"
+                  (click)="viewJobDetails(job.id, $event)">
+                  <i class="bi bi-eye me-1"></i>
+                  View Details
+                </button>
+                <button 
+                  class="btn btn-primary"
+                  (click)="applyForJob(job.id, $event)">
+                  <i class="bi bi-send me-1"></i>
+                  Apply Now
+                </button>
+              </div>
             </div>
           </div>
         }

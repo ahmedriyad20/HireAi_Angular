@@ -1,0 +1,194 @@
+<div class="job-details-container">
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading">
+    <div class="spinner"></div>
+    <p>Loading job details...</p>
+    <small class="text-muted">Check browser console (F12) for details</small>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-message">
+    <i class="error-icon">⚠️</i>
+    <p>{{ error() }}</p>
+    <button (click)="goBack()" class="btn-secondary">Go Back to Jobs</button>
+  </div>
+
+  <!-- Job Details Content -->
+  <div *ngIf="job() && !loading()" class="job-details-content">
+    <!-- Header Section -->
+    <div class="header-section">
+      <button (click)="goBack()" class="btn-back">
+        <span>←</span> Back to Jobs
+      </button>
+      
+      <div class="header-actions">
+        <button (click)="editJob()" class="btn-edit">
+          ✏️ Edit
+        </button>
+        <button (click)="openDeleteDialog()" class="btn-delete">
+          🗑️ Delete
+        </button>
+      </div>
+    </div>
+
+    <!-- Job Title & Status -->
+    <div class="job-header">
+      <div class="job-title-section">
+        <h1>{{ job()!.title }}</h1>
+        <div class="company-name">{{ job()!.companyName }}</div>
+      </div>
+      <span [class]="'status-badge ' + getStatusClass(job()!.jobStatus)">
+        {{ job()!.jobStatus }}
+      </span>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon">📊</div>
+        <div class="metric-info">
+          <div class="metric-label">Total Applications</div>
+          <div class="metric-value">{{ job()!.totalApplications || 0 }}</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">✅</div>
+        <div class="metric-info">
+          <div class="metric-label">Exams Completed</div>
+          <div class="metric-value">{{ job()!.examsCompleted || 0 }}</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">⏱️</div>
+        <div class="metric-info">
+          <div class="metric-label">Exam Duration</div>
+          <div class="metric-value">{{ job()!.examDurationMinutes }} min</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📝</div>
+        <div class="metric-info">
+          <div class="metric-label">Number of Questions</div>
+          <div class="metric-value">{{ job()!.numberOfQuestions }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Information Section -->
+    <div class="info-section">
+      <h2>Job Information</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Experience Level</label>
+          <span>{{ job()!.experienceLevel }}</span>
+        </div>
+        <div class="info-item">
+          <label>Employment Type</label>
+          <span>{{ job()!.employmentType }}</span>
+        </div>
+        <div class="info-item">
+          <label>Location</label>
+          <span>{{ job()!.location || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Salary Range</label>
+          <span>{{ job()!.salaryRange || 'N/A' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Application Deadline</label>
+          <span>{{ formatDateTime(job()!.applicationDeadline) }}</span>
+        </div>
+        <div class="info-item">
+          <label>Created At</label>
+          <span>{{ formatDate(job()!.createdAt) }}</span>
+        </div>
+        <div class="info-item">
+          <label>Last Updated</label>
+          <span>{{ formatDate(job()!.updatedAt) }}</span>
+        </div>
+        <div class="info-item">
+          <label>HR ID</label>
+          <span>{{ job()!.hrId }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assessment Settings Section -->
+    <div class="info-section">
+      <h2>Assessment Settings</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>ATS Minimum Score</label>
+          <span>{{ job()!.atsMinimumScore }}%</span>
+        </div>
+        <div class="info-item">
+          <label>Auto Send Exams</label>
+          <span>
+            <span [class]="job()!.autoSend ? 'badge-success' : 'badge-warning'">
+              {{ job()!.autoSend ? 'Enabled' : 'Disabled' }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description Section -->
+    <div class="info-section">
+      <h2>Job Description</h2>
+      <div class="description">
+        {{ job()!.description || 'No description provided.' }}
+      </div>
+    </div>
+
+    <!-- Skills Section -->
+    <div class="info-section">
+      <h2>Required Skills</h2>
+      <div class="skills-container">
+        <div *ngIf="!job()!.skills || job()!.skills!.length === 0" class="no-skills">
+          No skills specified
+        </div>
+        <div *ngFor="let skill of job()!.skills" class="skill-card">
+          <div class="skill-title">{{ skill.title }}</div>
+          <div class="skill-description">{{ skill.description }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+@if (showDeleteDialog()) {
+  <div class="modal-overlay" (click)="closeDeleteDialog()">
+    <div class="confirmation-dialog" (click)="$event.stopPropagation()">
+      @if (!deleteSuccess()) {
+        <div class="dialog-icon delete-icon">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <h3 class="dialog-title">Delete Job Posting</h3>
+        <p class="dialog-message">Are you sure you want to delete this job posting? This action cannot be undone.</p>
+        
+        @if (deleteMessage()) {
+          <div class="alert alert-danger mt-3">
+            {{ deleteMessage() }}
+          </div>
+        }
+        
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" (click)="closeDeleteDialog()" type="button">
+            Cancel
+          </button>
+          <button class="btn btn-danger" (click)="confirmDelete()" type="button">
+            <i class="bi bi-trash me-2"></i>
+            Delete Job
+          </button>
+        </div>
+      } @else {
+        <div class="dialog-icon success-icon">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <h3 class="dialog-title">Success!</h3>
+        <p class="dialog-message">{{ deleteMessage() }}</p>
+      }
+    </div>
+  </div>
+}

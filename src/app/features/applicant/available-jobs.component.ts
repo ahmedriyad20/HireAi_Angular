@@ -1,6 +1,6 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { JobOpening, JobFilters, JobStatus, ExperienceLevel, EmploymentType } from '../../core/models/job.model';
 import { AvailableJobsService, JobResponse } from '../../core/services/available-jobs.service';
@@ -40,9 +40,17 @@ export class AvailableJobsComponent implements OnInit {
 
   private readonly router = inject(Router);
   private readonly jobsService = inject(AvailableJobsService);
+  private readonly route = inject(ActivatedRoute);
 
   ngOnInit() {
     this.loadJobs();
+    
+    // Listen for query parameters from search
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.updateFilter('searchQuery', params['search']);
+      }
+    });
   }
 
   filteredJobs = computed(() => {
@@ -125,8 +133,8 @@ export class AvailableJobsComponent implements OnInit {
     
     this.jobsService.getAvailableJobs().subscribe({
       next: (response: JobResponse[]) => {
-        const jobs: JobOpening[] = response.map((job, index) => ({
-          id: index + 1,
+        const jobs: JobOpening[] = response.map((job) => ({
+          id: job.jobId,
           title: job.title,
           companyName: job.companyName,
           description: job.description,
@@ -140,7 +148,7 @@ export class AvailableJobsComponent implements OnInit {
           numberOfQuestions: job.numberOfQuestions,
           applicationDeadline: new Date(job.applicationDeadline),
           atsMinimumScore: job.atsMinimumScore
-        }));
+        }));;
         
         this.allJobs.set(jobs);
         
@@ -188,7 +196,10 @@ export class AvailableJobsComponent implements OnInit {
     this.selectedLocationLabel.set('All Locations');
   }
 
-  viewJobDetails(jobId: number | undefined) {
+  viewJobDetails(jobId: number | undefined, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     if (jobId) {
       this.router.navigate(['/applicant/jobs', jobId]);
     }
@@ -201,9 +212,10 @@ export class AvailableJobsComponent implements OnInit {
     }
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: Date | string): string {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
+    const diffTime = dateObj.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays < 0) return 'Expired';
@@ -211,7 +223,7 @@ export class AvailableJobsComponent implements OnInit {
     if (diffDays === 1) return 'Tomorrow';
     if (diffDays < 7) return `${diffDays} days left`;
     
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   getExperienceLevelDisplay(level?: ExperienceLevel): string {
@@ -238,10 +250,11 @@ export class AvailableJobsComponent implements OnInit {
     return displayMap[type] || type;
   }
 
-  isDeadlineNear(deadline?: Date): boolean {
+  isDeadlineNear(deadline?: Date | string): boolean {
     if (!deadline) return false;
+    const deadlineObj = typeof deadline === 'string' ? new Date(deadline) : deadline;
     const now = new Date();
-    const diffTime = deadline.getTime() - now.getTime();
+    const diffTime = deadlineObj.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 3 && diffDays > 0;
   }
