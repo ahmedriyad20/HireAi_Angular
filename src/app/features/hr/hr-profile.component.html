@@ -1,0 +1,493 @@
+<div class="profile-wrapper">
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner">
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+      <div class="spinner-ring"></div>
+    </div>
+    <p class="loading-text">Loading your profile...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-container">
+    <div class="error-box">
+      <i class="bi bi-exclamation-triangle"></i>
+      <h2>Oops! Something went wrong</h2>
+      <p>{{ error() }}</p>
+      <button class="retry-btn" (click)="loadProfile()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Try Again
+      </button>
+    </div>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="profile() && !loading()" class="profile-page">
+    <!-- Hero Header Section -->
+    <div class="profile-hero">
+      <!-- Edit Button -->
+      <button *ngIf="!isEditMode()" class="edit-profile-btn animate-fade-in" (click)="enterEditMode()">
+        <i class="bi bi-pencil"></i>
+        Edit Profile
+      </button>
+
+      <div class="hero-background"></div>
+      <div class="hero-content">
+        <div class="profile-avatar animate-scale-in">
+          <div class="avatar-circle">
+            {{ profile()!.fullName.charAt(0).toUpperCase() }}
+          </div>
+          <div class="status-indicator" [ngClass]="getStatusBadgeClass()">
+            <span class="status-dot"></span>
+            <span class="status-text">{{ profile()!.isActive ? 'Active' : 'Inactive' }}</span>
+          </div>
+        </div>
+        
+        <div class="hero-text animate-slide-up">
+          <h1 class="profile-title-main">{{ profile()!.fullName }}</h1>
+          <p class="profile-job-title">{{ profile()!.title }}</p>
+          <div class="hero-meta">
+            <div class="meta-badge">
+              <i class="bi bi-envelope"></i>
+              {{ profile()!.email }}
+            </div>
+            <div class="meta-badge">
+              <i class="bi bi-telephone"></i>
+              {{ profile()!.phone }}
+            </div>
+            <div class="meta-badge" [ngClass]="getAccountBadgeClass()">
+              <i class="bi bi-star-fill"></i>
+              {{ profile()!.accountType }} Account
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Content Grid -->
+    <div class="profile-content-grid">
+      <!-- Company Information Card -->
+      <div class="profile-card animate-fade-in" style="animation-delay: 0.1s;">
+        <div class="card-header">
+          <i class="bi bi-building"></i>
+          <h2>Company Information</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-briefcase"></i>
+              Company Name
+            </div>
+            <div class="info-value">{{ profile()!.companyName }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-geo-alt"></i>
+              Company Address
+            </div>
+            <div class="info-value">{{ profile()!.companyAddress }}</div>
+          </div>
+
+          <div class="info-row full-width">
+            <div class="info-label">
+              <i class="bi bi-file-text"></i>
+              Description
+            </div>
+            <div class="info-value description">
+              {{ profile()!.companyDescription }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Personal Information Card -->
+      <div class="profile-card animate-fade-in" style="animation-delay: 0.2s;">
+        <div class="card-header">
+          <i class="bi bi-person-circle"></i>
+          <h2>Personal Information</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-person"></i>
+              Full Name
+            </div>
+            <div class="info-value">{{ profile()!.fullName }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-shield-check"></i>
+              Role
+            </div>
+            <div class="info-value">
+              <span class="role-badge">{{ profile()!.role }}</span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-telephone-fill"></i>
+              Phone Number
+            </div>
+            <div class="info-value">{{ profile()!.phone }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-envelope-at"></i>
+              Email Address
+            </div>
+            <div class="info-value">{{ profile()!.email }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-geo-alt"></i>
+              Address
+            </div>
+            <div class="info-value">{{ profile()!.address || 'No address provided' }}</div>
+          </div>
+
+          <div class="info-row full-width" *ngIf="profile()!.bio">
+            <div class="info-label">
+              <i class="bi bi-card-text"></i>
+              Bio
+            </div>
+            <div class="info-value description">
+              {{ profile()!.bio }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Details Card -->
+      <div class="profile-card animate-fade-in" style="animation-delay: 0.3s;">
+        <div class="card-header">
+          <i class="bi bi-gear"></i>
+          <h2>Account Details</h2>
+        </div>
+        <div class="card-content">
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-award"></i>
+              Account Type
+            </div>
+            <div class="info-value">
+              <span [ngClass]="getAccountBadgeClass()" class="account-type-badge">
+                <i class="bi" [ngClass]="profile()!.isPremium ? 'bi-star-fill' : 'bi-star'"></i>
+                {{ profile()!.accountType }}
+              </span>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-circle-fill"></i>
+              Status
+            </div>
+            <div class="info-value">
+              <span [ngClass]="getStatusBadgeClass()" class="status-badge">
+                {{ profile()!.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="info-row" *ngIf="profile()!.isPremium && profile()!.premiumExpiry">
+            <div class="info-label">
+              <i class="bi bi-calendar-check"></i>
+              Premium Expiry
+            </div>
+            <div class="info-value">{{ formatDate(profile()!.premiumExpiry!) }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-clock-history"></i>
+              Last Login
+            </div>
+            <div class="info-value">{{ formatDate(profile()!.lastLogin) }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">
+              <i class="bi bi-calendar-plus"></i>
+              Member Since
+            </div>
+            <div class="info-value">{{ formatDate(profile()!.createdAt) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Card -->
+      <div class="profile-card stats-card animate-fade-in" style="animation-delay: 0.4s;">
+        <div class="card-header">
+          <i class="bi bi-bar-chart"></i>
+          <h2>Quick Overview</h2>
+        </div>
+        <div class="card-content stats-content">
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="bi bi-building"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Company</div>
+              <div class="stat-value">{{ profile()!.companyName }}</div>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-icon">
+              <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Position</div>
+              <div class="stat-value">{{ profile()!.title }}</div>
+            </div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-icon" [ngClass]="profile()!.isPremium ? 'premium-icon' : 'free-icon'">
+              <i class="bi" [ngClass]="profile()!.isPremium ? 'bi-star-fill' : 'bi-star'"></i>
+            </div>
+            <div class="stat-info">
+              <div class="stat-label">Subscription</div>
+              <div class="stat-value">{{ profile()!.accountType }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Form Modal -->
+    <div *ngIf="isEditMode()" class="edit-modal">
+      <div class="edit-modal-content">
+        <div class="edit-modal-header">
+          <h2><i class="bi bi-pencil-square"></i> Edit Profile</h2>
+          <button class="close-btn" (click)="cancelEdit()" [disabled]="isSaving()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Error Message in Modal -->
+        <div *ngIf="error() && isEditMode()" class="modal-error">
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ error() }}
+        </div>
+
+        <form (ngSubmit)="saveProfile()" class="edit-form">
+          <!-- Personal Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="bi bi-person-circle"></i> Personal Information
+            </h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fullName">
+                  <i class="bi bi-person"></i> Full Name
+                </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  [(ngModel)]="editForm.fullName"
+                  name="fullName"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="title">
+                  <i class="bi bi-briefcase"></i> Job Title
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  [(ngModel)]="editForm.title"
+                  name="title"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="phone">
+                  <i class="bi bi-telephone"></i> Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  [(ngModel)]="editForm.phone"
+                  name="phone"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="address">
+                  <i class="bi bi-geo-alt"></i> Address
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  [(ngModel)]="editForm.address"
+                  name="address"
+                  [disabled]="isSaving()"
+                />
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="bio">
+                <i class="bi bi-card-text"></i> Bio
+              </label>
+              <textarea
+                id="bio"
+                [(ngModel)]="editForm.bio"
+                name="bio"
+                rows="4"
+                [disabled]="isSaving()"
+                placeholder="Tell us about yourself..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Company Information Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="bi bi-building"></i> Company Information
+            </h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="companyName">
+                  <i class="bi bi-briefcase"></i> Company Name
+                </label>
+                <input
+                  type="text"
+                  id="companyName"
+                  [(ngModel)]="editForm.companyName"
+                  name="companyName"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="companyAddress">
+                  <i class="bi bi-geo-alt"></i> Company Address
+                </label>
+                <input
+                  type="text"
+                  id="companyAddress"
+                  [(ngModel)]="editForm.companyAddress"
+                  name="companyAddress"
+                  required
+                  [disabled]="isSaving()"
+                />
+              </div>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="companyDescription">
+                <i class="bi bi-file-text"></i> Company Description
+              </label>
+              <textarea
+                id="companyDescription"
+                [(ngModel)]="editForm.companyDescription"
+                name="companyDescription"
+                rows="4"
+                [disabled]="isSaving()"
+                placeholder="Describe your company..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Account Settings Section -->
+          <div class="form-section">
+            <h3 class="section-title">
+              <i class="bi bi-gear"></i> Account Settings
+            </h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="accountType">
+                  <i class="bi bi-award"></i> Account Type
+                </label>
+                <select
+                  id="accountType"
+                  [(ngModel)]="editForm.accountType"
+                  name="accountType"
+                  required
+                  disabled
+                >
+                  <option *ngFor="let type of accountTypes" [value]="type">
+                    {{ type }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-group" *ngIf="editForm.accountType !== 'Free'">
+                <label for="premiumExpiry">
+                  <i class="bi bi-calendar-check"></i> Premium Expiry
+                </label>
+                <input
+                  type="datetime-local"
+                  id="premiumExpiry"
+                  [(ngModel)]="editForm.premiumExpiry"
+                  name="premiumExpiry"
+                  [disabled]="isSaving()"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label" [class.disabled]="true">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="editForm.isPremium"
+                    name="isPremium"
+                    disabled
+                  />
+                  <span>
+                    <i class="bi" [class.bi-star-fill]="editForm.isPremium" [class.bi-star]="!editForm.isPremium"></i>
+                    {{ editForm.isPremium ? 'Premium Status' : 'Not Premium' }}
+                  </span>
+                </label>
+              </div>
+
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="editForm.isActive"
+                    name="isActive"
+                    [disabled]="isSaving()"
+                  />
+                  <span><i class="bi bi-circle-fill"></i> Active Status</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="cancelEdit()" [disabled]="isSaving()">
+              <i class="bi bi-x-circle"></i>
+              Cancel
+            </button>
+            <button type="submit" class="btn-save" [disabled]="isSaving()">
+              <i class="bi" [ngClass]="isSaving() ? 'bi-arrow-repeat spin' : 'bi-check-circle'"></i>
+              {{ isSaving() ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
