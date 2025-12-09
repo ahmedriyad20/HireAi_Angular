@@ -5,6 +5,7 @@ import { SidebarComponent, MenuItem } from '../shared/components/sidebar.compone
 import { HeaderComponent, User } from '../shared/components/header.component';
 import { AuthService } from '../core/services/auth.service';
 import { ApplicantProfileService } from '../core/services/applicant-profile.service';
+import { HrProfileService } from '../core/services/hr-profile.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -26,6 +27,7 @@ export class DashboardLayoutComponent implements OnInit {
   menuSections = signal<{ title: string; items: MenuItem[] }[]>([]);
   private authService = inject(AuthService);
   private profileService = inject(ApplicantProfileService);
+  private hrProfileService = inject(HrProfileService);
 
   constructor(private router: Router) {}
 
@@ -104,18 +106,39 @@ export class DashboardLayoutComponent implements OnInit {
         {
           title: 'Account',
           items: [
+            { label: 'My Profile', icon: 'person-circle', route: '/hr/profile' },
             { label: 'Account Settings', icon: 'gear', route: '/hr/settings' },
             { label: 'Billing', icon: 'credit-card', route: '/hr/billing' },
           ]
         }
       ]);
 
-      // For HR users, we'll use default for now (can be extended later with HR profile service)
-      this.user.set({
-        name: 'HR Manager',
-        email: '',
-        role: 'HR Manager'
-      });
+      // Fetch HR profile data
+      if (userId) {
+        this.hrProfileService.getHrProfile(parseInt(userId, 10)).subscribe({
+          next: (profile) => {
+            this.user.set({
+              name: profile.fullName || 'HR Manager',
+              email: profile.email || '',
+              role: profile.title || 'HR'
+            });
+          },
+          error: (error) => {
+            console.error('Error loading HR profile:', error);
+            this.user.set({
+              name: 'HR Manager',
+              email: '',
+              role: 'HR Manager'
+            });
+          }
+        });
+      } else {
+        this.user.set({
+          name: 'HR Manager',
+          email: '',
+          role: 'HR Manager'
+        });
+      }
     }
   }
 
