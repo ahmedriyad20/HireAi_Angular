@@ -783,6 +783,15 @@ a:hover {
   background-color: var(--danger-500);
 }
 
+.status-tag.ATSFailed {
+  background-color: var(--danger-100);
+  color: var(--danger-700);
+}
+
+.status-tag.ATSFailed::before {
+  background-color: var(--danger-500);
+}
+
 /* ============================================
    Modal Styles
    ============================================ */
