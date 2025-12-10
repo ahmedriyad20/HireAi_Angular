@@ -55,4 +55,5 @@ export interface JobFilters {
   employmentType?: EmploymentType;
   location?: string;
   jobStatus?: JobStatus;
+  applicationStatus?: 'all' | 'applied' | 'notApplied';
 }

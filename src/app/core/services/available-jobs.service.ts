@@ -18,6 +18,30 @@ export interface JobResponse {
   numberOfQuestions: number;
   applicationDeadline: string;
   atsMinimumScore: number;
+  hrId: number;
+}
+
+export interface JobDetailsResponse {
+  id: number;
+  title: string;
+  companyName: string;
+  description: string;
+  jobStatus: string;
+  examDurationMinutes: number;
+  experienceLevel: string;
+  employmentType: string;
+  location: string;
+  salaryRange: string;
+  numberOfQuestions: number;
+  applicationDeadline: string;
+  atsMinimumScore: number;
+  autoSend: boolean;
+  hrId: number;
+  skills: any[];
+  createdAt: string;
+  updatedAt: string | null;
+  totalApplications: number;
+  examsCompleted: number;
 }
 
 @Injectable({
@@ -26,9 +50,14 @@ export interface JobResponse {
 export class AvailableJobsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = 'http://localhost:5290/api/AvailableJobs';
+  private readonly jobApiUrl = 'http://localhost:5290/api/Job';
 
   getAvailableJobs(): Observable<JobResponse[]> {
     return this.http.get<JobResponse[]>(this.apiUrl);
+  }
+
+  getJobById(jobId: number): Observable<JobDetailsResponse> {
+    return this.http.get<JobDetailsResponse>(`${this.jobApiUrl}/${jobId}`);
   }
 
   getJobIcon(title: string): string {
