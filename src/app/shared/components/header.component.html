@@ -45,13 +45,13 @@
       </button>
       <ul class="dropdown-menu dropdown-menu-end">
         <li>
-          <a class="dropdown-item" routerLink="/applicant/profile">
+          <a class="dropdown-item" [routerLink]="profileRoute()">
             <i class="bi bi-person"></i>
             My Profile
           </a>
         </li>
         <li>
-          <a class="dropdown-item" routerLink="/applicant/settings">
+          <a class="dropdown-item" [routerLink]="settingsRoute()">
             <i class="bi bi-gear"></i>
             Account Settings
           </a>

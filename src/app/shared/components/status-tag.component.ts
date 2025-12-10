@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type StatusType = 'passed' | 'failed' | 'pending' | 'in-progress' | 'interview' | 'rejected' | 'accepted' | 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected';
+export type StatusType = 'passed' | 'failed' | 'pending' | 'in-progress' | 'interview' | 'rejected' | 'accepted' | 'ExamSent' | 'ATSPassed' | 'ATSFailed' | 'UnderReview' | 'Completed' | 'Rejected';
 
 @Component({
   selector: 'app-status-tag',

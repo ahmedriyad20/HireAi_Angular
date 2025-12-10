@@ -1,4 +1,4 @@
-﻿import { Component, input, output } from '@angular/core';
+﻿import { Component, input, output, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +22,15 @@ export class HeaderComponent {
   onLogout = output<void>();
 
   searchQuery = '';
+
+  // Computed properties for dynamic routes
+  profileRoute = computed(() => {
+    return this.router.url.startsWith('/hr') ? '/hr/profile' : '/applicant/profile';
+  });
+
+  settingsRoute = computed(() => {
+    return this.router.url.startsWith('/hr') ? '/hr/settings' : '/applicant/settings';
+  });
 
   constructor(private router: Router) {}
 
