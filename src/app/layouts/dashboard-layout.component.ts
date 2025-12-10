@@ -33,7 +33,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   ngOnInit() {
     // Determine user role based on current route
-    const isApplicant = this.router.url.includes('/applicant');
+    const isApplicant = this.router.url.startsWith('/applicant');
     const userRole = this.authService.getUserRole();
     const userId = this.authService.getUserId();
     
