@@ -1,0 +1,195 @@
+<div class="applicants-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1 class="page-title">
+      <i class="bi bi-people"></i>
+      Applicants Management
+    </h1>
+    <p class="page-subtitle">View and manage all job applications</p>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="loading-text">Loading jobs...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error() && !isLoading()) {
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Jobs List -->
+  @if (!isLoading() && !error() && jobs().length > 0) {
+    <div class="jobs-list">
+      @for (job of jobs(); track job.jobId) {
+        <div class="job-card" [class.expanded]="isJobExpanded(job.jobId)">
+          <!-- Job Header (Clickable) -->
+          <div class="job-header" (click)="toggleJob(job)">
+            <div class="job-main-info">
+              <div class="job-title-section">
+                <h3 class="job-title">{{ job.title }}</h3>
+                <span class="job-status-badge" [ngClass]="getJobStatusClass(job.jobStatus)">
+                  {{ job.jobStatus }}
+                </span>
+              </div>
+              <p class="company-name">
+                <i class="bi bi-building"></i>
+                {{ job.companyName }}
+              </p>
+            </div>
+
+            <div class="job-stats">
+              <div class="stat-item">
+                <span class="stat-label">Total Applications</span>
+                <span class="stat-value">{{ job.totalApplications }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Took Exam</span>
+                <span class="stat-value">{{ job.applicantsTookExam }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Avg ATS Score</span>
+                <span class="stat-value">{{ job.avgATSScore ? (job.avgATSScore | number:'1.0-1') + '%' : 'N/A' }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">Avg Exam Score</span>
+                <span class="stat-value">{{ job.avgExamScore ? (job.avgExamScore | number:'1.0-1') + '%' : 'N/A' }}</span>
+              </div>
+            </div>
+
+            <div class="job-meta">
+              <span class="created-date">
+                <i class="bi bi-calendar"></i>
+                Posted: {{ formatDate(job.createdAt) }}
+              </span>
+              <i class="bi expand-icon" 
+                 [ngClass]="isJobExpanded(job.jobId) ? 'bi-chevron-up' : 'bi-chevron-down'">
+              </i>
+            </div>
+          </div>
+
+          <!-- Expanded Applications Section -->
+          @if (isJobExpanded(job.jobId)) {
+            <div class="applications-section">
+              @if (getJobState(job.jobId)?.isLoading) {
+                <!-- Loading Applications -->
+                <div class="applications-loading">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <span>Loading applications...</span>
+                </div>
+              } @else if (getJobState(job.jobId)?.error) {
+                <!-- Error Loading Applications -->
+                <div class="alert alert-warning mb-0" role="alert">
+                  <i class="bi bi-exclamation-circle"></i>
+                  {{ getJobState(job.jobId)?.error }}
+                </div>
+              } @else if ((getJobState(job.jobId)?.applications?.length || 0) === 0) {
+                <!-- No Applications -->
+                <div class="no-applications">
+                  <i class="bi bi-inbox"></i>
+                  <p>No applications yet for this job</p>
+                </div>
+              } @else {
+                <!-- Applications List -->
+                <div class="applications-list">
+                  <div class="applications-header">
+                    <h4>Applications ({{ getJobState(job.jobId)?.applications?.length || 0 }})</h4>
+                  </div>
+
+                  @for (application of getVisibleApplications(job.jobId); track application.applicationId) {
+                    <div class="application-card">
+                      <div class="application-header">
+                        <div class="applicant-info">
+                          <div class="applicant-avatar">
+                            <i class="bi bi-person-circle"></i>
+                          </div>
+                          <div class="applicant-details">
+                            <h5 class="applicant-name">{{ application.applicantName }}</h5>
+                            <p class="applicant-phone">
+                              <i class="bi bi-telephone"></i>
+                              {{ application.applicantPhone }}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div class="application-status-badges">
+                          <span class="status-badge" [ngClass]="getStatusClass(application.applicationStatus)">
+                            {{ application.applicationStatus }}
+                          </span>
+                          <span class="exam-badge" [ngClass]="getExamStatusClass(application.examStatus)">
+                            Exam: {{ application.examStatus }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div class="application-details">
+                        <div class="detail-item">
+                          <span class="detail-label">Applied On:</span>
+                          <span class="detail-value">{{ formatDate(application.dateApplied) }}</span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="detail-label">ATS Score:</span>
+                          <span class="detail-value score" 
+                                [class.high-score]="application.atsScore >= 80"
+                                [class.medium-score]="application.atsScore >= 60 && application.atsScore < 80"
+                                [class.low-score]="application.atsScore < 60">
+                            {{ application.atsScore }}%
+                          </span>
+                        </div>
+                        <div class="detail-item">
+                          <span class="detail-label">Applicant ID:</span>
+                          <span class="detail-value">#{{ application.applicantId }}</span>
+                        </div>
+                        <div class="application-actions">
+                          <button class="btn btn-sm btn-outline-primary" 
+                                  (click)="downloadCV(application.cvKey)"
+                                  title="Download CV">
+                            <i class="bi bi-download"></i>
+                            Download CV
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Load More Button -->
+                  @if (hasMoreApplications(job.jobId)) {
+                    <div class="load-more-container">
+                      <button class="btn btn-load-more" 
+                              (click)="loadMoreApplications(job.jobId)">
+                        <i class="bi bi-chevron-down"></i>
+                        Load More Applications
+                        <span class="remaining-count">
+                          ({{ (getJobState(job.jobId)?.applications?.length || 0) - (getJobState(job.jobId)?.visibleCount || 0) }} remaining)
+                        </span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && !error() && jobs().length === 0) {
+    <div class="empty-state">
+      <i class="bi bi-briefcase"></i>
+      <h3>No Jobs Posted Yet</h3>
+      <p>You haven't posted any jobs. Create your first job posting to start receiving applications.</p>
+    </div>
+  }
+</div>
