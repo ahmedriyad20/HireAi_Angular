@@ -97,6 +97,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/applicant/application-details.component').then(m => m.ApplicationDetailsComponent)
       },
       {
+        path: 'job-exam/:applicationId',
+        loadComponent: () => import('./features/applicant/job-exam.component').then(m => m.JobExamComponent)
+      },
+      {
+        path: 'exam-results',
+        loadComponent: () => import('./features/applicant/exam-results.component').then(m => m.ExamResultsComponent)
+      },
+      {
         path: 'mock-exams',
         loadComponent: () => import('./features/applicant/mock-exams.component').then(m => m.MockExamsComponent)
       },
