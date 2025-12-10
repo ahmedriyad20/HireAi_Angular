@@ -2,13 +2,18 @@ import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { switchMap, catchError, tap } from 'rxjs/operators';
+import { throwError, of } from 'rxjs';
 import { JobOpening, JobFilters, JobStatus, ExperienceLevel, EmploymentType } from '../../core/models/job.model';
 import { AvailableJobsService, JobResponse } from '../../core/services/available-jobs.service';
+import { ApplicationsService, CreateApplicationRequest } from '../../core/services/applications.service';
+import { AuthService } from '../../core/services/auth.service';
+import { ApplicationProgressModalComponent, ModalStep, AnalysisResult } from '../../shared/components/application-progress-modal.component';
 
 @Component({
   selector: 'app-available-jobs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ApplicationProgressModalComponent],
   templateUrl: './available-jobs.component.html',
   styleUrls: ['./available-jobs.component.css']
 })
@@ -17,6 +22,24 @@ export class AvailableJobsComponent implements OnInit {
   filters = signal<JobFilters>({});
   loading = signal(false);
   viewMode = signal<'grid' | 'list'>('grid');
+  appliedJobIds = signal<Set<number>>(new Set());
+  checkingApplications = signal(false);
+  
+  // Application Progress Modal
+  showProgressModal = signal(false);
+  modalStep = signal<ModalStep>('idle');
+  modalError = signal('');
+  analysisResult = signal<AnalysisResult | null>(null);
+  pendingApplicationId = signal<number | null>(null);
+  showRetryButton = signal(false);
+  applying = signal(false);
+  
+  // Confirmation Modal
+  showConfirmModal = signal(false);
+  jobToApply = signal<number | null>(null);
+  
+  // Duplicate Application Modal
+  showDuplicateModal = signal(false);
   
   // Pagination
   currentPage = signal(1);
@@ -37,13 +60,18 @@ export class AvailableJobsComponent implements OnInit {
   selectedExperienceLabel = signal<string>('All Levels');
   selectedEmploymentLabel = signal<string>('All Types');
   selectedLocationLabel = signal<string>('All Locations');
+  selectedApplicationStatusLabel = signal<string>('All Jobs');
 
+  // Services
   private readonly router = inject(Router);
   private readonly jobsService = inject(AvailableJobsService);
   private readonly route = inject(ActivatedRoute);
+  private readonly applicationsService = inject(ApplicationsService);
+  private readonly authService = inject(AuthService);
 
   ngOnInit() {
     this.loadJobs();
+    this.loadAppliedJobs();
     
     // Listen for query parameters from search
     this.route.queryParams.subscribe(params => {
@@ -83,6 +111,17 @@ export class AvailableJobsComponent implements OnInit {
       // Location filter
       if (filters.location && job.location !== filters.location) {
         return false;
+      }
+
+      // Application status filter
+      if (filters.applicationStatus && filters.applicationStatus !== 'all') {
+        const hasApplied = this.hasAppliedToJob(job.id);
+        if (filters.applicationStatus === 'applied' && !hasApplied) {
+          return false;
+        }
+        if (filters.applicationStatus === 'notApplied' && hasApplied) {
+          return false;
+        }
       }
 
       // Only show active jobs
@@ -147,7 +186,8 @@ export class AvailableJobsComponent implements OnInit {
           salaryRange: job.salaryRange,
           numberOfQuestions: job.numberOfQuestions,
           applicationDeadline: new Date(job.applicationDeadline),
-          atsMinimumScore: job.atsMinimumScore
+          atsMinimumScore: job.atsMinimumScore,
+          hrId: job.hrId
         }));;
         
         this.allJobs.set(jobs);
@@ -183,6 +223,8 @@ export class AvailableJobsComponent implements OnInit {
       this.selectedEmploymentLabel.set(value ? this.getEmploymentTypeDisplay(value) : 'All Types');
     } else if (key === 'location') {
       this.selectedLocationLabel.set(value || 'All Locations');
+    } else if (key === 'applicationStatus') {
+      this.selectedApplicationStatusLabel.set(this.getApplicationStatusDisplay(value));
     }
     
     // Reset to first page when filters change
@@ -194,6 +236,7 @@ export class AvailableJobsComponent implements OnInit {
     this.selectedExperienceLabel.set('All Levels');
     this.selectedEmploymentLabel.set('All Types');
     this.selectedLocationLabel.set('All Locations');
+    this.selectedApplicationStatusLabel.set('All Jobs');
   }
 
   viewJobDetails(jobId: number | undefined, event?: Event) {
@@ -205,11 +248,257 @@ export class AvailableJobsComponent implements OnInit {
     }
   }
 
+  loadAppliedJobs(): void {
+    const userId = this.authService.getUserId();
+    if (!userId) return;
+    
+    const applicantId = parseInt(userId, 10);
+    if (isNaN(applicantId)) return;
+
+    this.checkingApplications.set(true);
+    this.applicationsService.getApplicationsList(applicantId).subscribe({
+      next: (applications) => {
+        const jobIds = new Set(applications.map(app => app.jobId));
+        this.appliedJobIds.set(jobIds);
+        this.checkingApplications.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading applied jobs:', error);
+        this.checkingApplications.set(false);
+      }
+    });
+  }
+
+  hasAppliedToJob(jobId: number | undefined): boolean {
+    if (!jobId) return false;
+    return this.appliedJobIds().has(jobId);
+  }
+
   applyForJob(jobId: number | undefined, event: Event) {
     event.stopPropagation();
-    if (jobId) {
-      this.router.navigate(['/applicant/jobs', jobId, 'apply']);
+    
+    if (!jobId) {
+      alert('Invalid job ID');
+      return;
     }
+
+    // Check if already applied
+    if (this.hasAppliedToJob(jobId)) {
+      this.showDuplicateModal.set(true);
+      return;
+    }
+
+    // Prevent multiple simultaneous applications
+    if (this.applying()) {
+      return;
+    }
+
+    // Get applicant ID from localStorage
+    const userId = this.authService.getUserId();
+    if (!userId) {
+      alert('Please login to apply for jobs');
+      this.router.navigate(['/auth/login']);
+      return;
+    }
+
+    const applicantId = parseInt(userId, 10);
+    if (isNaN(applicantId)) {
+      alert('Invalid user session. Please login again.');
+      return;
+    }
+
+    // Show confirmation modal
+    this.jobToApply.set(jobId);
+    this.showConfirmModal.set(true);
+  }
+
+  confirmApplication() {
+    const jobId = this.jobToApply();
+    if (!jobId) return;
+
+    // Close confirmation modal
+    this.showConfirmModal.set(false);
+    this.jobToApply.set(null);
+
+    // Get applicant ID
+    const userId = this.authService.getUserId();
+    if (!userId) return;
+    
+    const applicantId = parseInt(userId, 10);
+
+    // Start application process
+    this.applying.set(true);
+    this.showProgressModal.set(true);
+    this.modalStep.set('checking');
+    this.modalError.set('');
+    this.analysisResult.set(null);
+    this.showRetryButton.set(false);
+
+    // Step 1: Fetch job details to get HR ID
+    this.jobsService.getJobById(jobId).pipe(
+      catchError(error => {
+        this.handleError('Failed to load job details. Please try again.', false);
+        return throwError(() => error);
+      }),
+      switchMap(jobDetails => {
+        if (!jobDetails.hrId) {
+          this.handleError('Job information is incomplete. Please contact support.', false);
+          return throwError(() => new Error('No HR ID found'));
+        }
+
+        // Step 2: Fetch applicant data to get resume URL
+        this.modalStep.set('fetching');
+        return this.applicationsService.getApplicantData(applicantId).pipe(
+          catchError(error => {
+            this.handleError('Failed to retrieve your profile data. Please ensure your profile is complete.', false);
+            return throwError(() => error);
+          }),
+          switchMap(applicantData => {
+            if (!applicantData.resumeUrl) {
+              this.handleError('No CV found in your profile. Please upload a CV in your profile settings before applying.', false);
+              return throwError(() => new Error('No CV found'));
+            }
+
+            // Step 3: Create application
+            this.modalStep.set('creating');
+            const createRequest: CreateApplicationRequest = {
+              applicantId: applicantId,
+              jobId: jobId,
+              hrId: jobDetails.hrId,
+              cvFilePath: applicantData.resumeUrl,
+              applicationStatus: 'UnderReview'
+            };
+
+            return this.applicationsService.createApplication(createRequest);
+          })
+        );
+      }),
+      catchError(error => {
+        // Check if error is from previous step
+        if (error.message === 'No CV found') {
+          return throwError(() => error);
+        }
+        
+        // Handle duplicate application error
+        if (error.status === 400 || error.error?.message?.toLowerCase().includes('already applied')) {
+          this.handleError('You have already applied for this position. Please check your applications page.', false);
+        } else {
+          this.handleError('Failed to create application. ' + (error.error?.message || error.message || 'Please try again later.'), false);
+        }
+        return throwError(() => error);
+      }),
+      switchMap(createResponse => {
+        this.pendingApplicationId.set(createResponse.id);
+        
+        // Step 4: Analyze CV with AI
+        this.modalStep.set('analyzing');
+        return this.applicationsService.analyzeApplication(createResponse.id);
+      }),
+      catchError(error => {
+        // If analysis fails, show retry option
+        this.handleError(
+          'Your application was submitted successfully, but CV analysis failed. ' +
+          (error.error?.message || error.message || 'You can retry the analysis or check your application later.'),
+          true // Show retry button
+        );
+        return throwError(() => error);
+      })
+    ).subscribe({
+      next: (analysisResponse) => {
+        // Success! Show results
+        this.modalStep.set('success');
+        this.analysisResult.set({
+          applicationId: analysisResponse.applicationId,
+          atsScore: analysisResponse.atsScore,
+          status: analysisResponse.status,
+          feedback: analysisResponse.feedback,
+          skillsFound: analysisResponse.skillsFound,
+          skillsGaps: analysisResponse.skillsGaps
+        });
+        this.applying.set(false);
+        
+        // Add to applied jobs set
+        const jobId = this.jobToApply();
+        if (jobId) {
+          const currentAppliedJobs = new Set(this.appliedJobIds());
+          currentAppliedJobs.add(jobId);
+          this.appliedJobIds.set(currentAppliedJobs);
+        }
+      },
+      error: (error) => {
+        console.error('Application process error:', error);
+        this.applying.set(false);
+      }
+    });
+  }
+
+  private handleError(message: string, showRetry: boolean): void {
+    this.modalStep.set('error');
+    this.modalError.set(message);
+    this.showRetryButton.set(showRetry);
+    this.applying.set(false);
+  }
+
+  retryAnalysis(): void {
+    const applicationId = this.pendingApplicationId();
+    if (!applicationId) {
+      alert('No pending application to retry. Please try applying again.');
+      this.closeModal();
+      return;
+    }
+
+    // Reset modal state and start analyzing
+    this.applying.set(true);
+    this.modalStep.set('analyzing');
+    this.modalError.set('');
+    this.showRetryButton.set(false);
+
+    this.applicationsService.analyzeApplication(applicationId).subscribe({
+      next: (analysisResponse) => {
+        // Success! Show results
+        this.modalStep.set('success');
+        this.analysisResult.set({
+          applicationId: analysisResponse.applicationId,
+          atsScore: analysisResponse.atsScore,
+          status: analysisResponse.status,
+          feedback: analysisResponse.feedback,
+          skillsFound: analysisResponse.skillsFound,
+          skillsGaps: analysisResponse.skillsGaps
+        });
+        this.applying.set(false);
+        this.pendingApplicationId.set(null);
+      },
+      error: (error) => {
+        console.error('Retry analysis error:', error);
+        this.handleError(
+          'CV analysis failed again. ' + (error.error?.message || error.message || 'Please check your application later in the applications page.'),
+          true // Allow another retry
+        );
+      }
+    });
+  }
+
+  closeModal(): void {
+    this.showProgressModal.set(false);
+    this.modalStep.set('idle');
+    this.modalError.set('');
+    this.analysisResult.set(null);
+    this.showRetryButton.set(false);
+    this.applying.set(false);
+  }
+
+  closeConfirmModal(): void {
+    this.showConfirmModal.set(false);
+    this.jobToApply.set(null);
+  }
+
+  closeDuplicateModal(): void {
+    this.showDuplicateModal.set(false);
+  }
+
+  navigateToApplications(): void {
+    this.closeModal();
+    this.router.navigate(['/applicant/applications']);
   }
 
   formatDate(date: Date | string): string {
@@ -248,6 +537,15 @@ export class AvailableJobsComponent implements OnInit {
       'FreeLance': 'Freelance'
     };
     return displayMap[type] || type;
+  }
+
+  getApplicationStatusDisplay(status?: string): string {
+    const displayMap: Record<string, string> = {
+      'all': 'All Jobs',
+      'applied': 'Applied Jobs',
+      'notApplied': 'Not Applied'
+    };
+    return displayMap[status || 'all'] || 'All Jobs';
   }
 
   isDeadlineNear(deadline?: Date | string): boolean {
