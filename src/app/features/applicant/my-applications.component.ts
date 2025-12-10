@@ -10,16 +10,18 @@ import { AuthService } from '../../core/services/auth.service';
 interface Application {
   id: number;
   applicationId: number;
+  jobId: number;
   jobTitle: string;
   company: string;
   location: string;
   jobType: 'FullTime' | 'PartTime' | 'Internship' | 'FreeLance';
   appliedDate: string;
   rawAppliedDate: Date;
-  status: 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected';
+  status: 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected' | 'ATSFailed';
   atsScore: number | null;
   examScore: number | null;
   examStatus: 'pending' | 'completed' | 'scheduled';
+  examEvaluationStatus: 'Pending' | 'Passed' | 'Failed';
   interviewDate?: string;
   salary?: string;
   description: string;
@@ -76,6 +78,7 @@ export class MyApplicationsComponent implements OnInit {
         const mappedApplications: Application[] = response.map((app, index) => ({
           id: index + 1,
           applicationId: app.applicationId,
+          jobId: app.jobId,
           jobTitle: app.jobTitle,
           company: app.companyName,
           location: app.companyLocation,
@@ -86,12 +89,16 @@ export class MyApplicationsComponent implements OnInit {
             year: 'numeric' 
           }),
           rawAppliedDate: new Date(app.appliedAt),
-          status: app.applicationStatus as 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected',
+          status: app.applicationStatus as 'ExamSent' | 'ATSPassed' | 'UnderReview' | 'Completed' | 'Rejected' | 'ATSFailed',
           atsScore: app.atsScore,
           examScore: null, // Not provided by API
           examStatus: 'pending', // Default since API doesn't provide this
+          examEvaluationStatus: app.examEvaluationStatus as 'Pending' | 'Passed' | 'Failed',
           description: '' // Not provided by API
         }));
+        
+        // Sort by applied date (most recent first)
+        mappedApplications.sort((a, b) => b.rawAppliedDate.getTime() - a.rawAppliedDate.getTime());
         
         this.applications.set(mappedApplications);
         this.filteredApplications.set(mappedApplications);
@@ -192,6 +199,7 @@ export class MyApplicationsComponent implements OnInit {
 
   // Check if application should show "Take Exam" button
   shouldShowTakeExam(status: Application['status']): boolean {
+    // Show Take Exam button only for ATSPassed status (not for Completed)
     return status === 'ATSPassed';
   }
 
@@ -202,12 +210,12 @@ export class MyApplicationsComponent implements OnInit {
 
   // Check if application should show "Delete Application" button
   shouldShowDelete(status: Application['status']): boolean {
-    return status === 'Completed' || status === 'Rejected';
+    return status === 'Completed' || status === 'Rejected' || status === 'ATSFailed';
   }
 
   // Get button text based on status
   getDeleteButtonText(status: Application['status']): string {
-    if (status === 'Completed' || status === 'Rejected') {
+    if (status === 'Completed' || status === 'Rejected' || status === 'ATSFailed') {
       return 'Delete Application';
     }
     return 'Withdraw Application';
@@ -215,10 +223,8 @@ export class MyApplicationsComponent implements OnInit {
 
   // Handle Take Exam action
   takeExam(application: Application): void {
-    // TODO: Navigate to exam page or implement exam logic
-    console.log('Taking exam for application:', application.applicationId);
-    // Example: this.router.navigate(['/applicant/exam', application.applicationId]);
-    alert('Exam functionality will be implemented. Application ID: ' + application.applicationId);
+    // Navigate to job exam page with application ID
+    this.router.navigate(['/applicant/job-exam', application.applicationId]);
   }
 
   // Handle Delete/Withdraw Application

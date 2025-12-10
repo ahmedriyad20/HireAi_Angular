@@ -105,6 +105,7 @@
             <option value="all">All Status</option>
             <option value="ExamSent">Exam Sent</option>
             <option value="ATSPassed">ATS Passed</option>
+            <option value="ATSFailed">ATS Failed</option>
             <option value="UnderReview">Under Review</option>
             <option value="Completed">Completed</option>
             <option value="Rejected">Rejected</option>
@@ -220,7 +221,24 @@
             <!-- Status & Actions -->
             <div class="mt-auto">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <app-status-tag [status]="app.status"></app-status-tag>
+                <div>
+                  <small class="text-muted d-block mb-1">Application Status</small>
+                  <app-status-tag [status]="app.status"></app-status-tag>
+                </div>
+                <!-- Exam Evaluation Status -->
+                <div class="text-end">
+                  <small class="text-muted d-block mb-1">Exam Status</small>
+                  <span class="badge"
+                        [class.bg-warning]="app.examEvaluationStatus === 'Pending'"
+                        [class.bg-success]="app.examEvaluationStatus === 'Passed'"
+                        [class.bg-danger]="app.examEvaluationStatus === 'Failed'">
+                    <i class="bi"
+                       [class.bi-hourglass-split]="app.examEvaluationStatus === 'Pending'"
+                       [class.bi-check-circle]="app.examEvaluationStatus === 'Passed'"
+                       [class.bi-x-circle]="app.examEvaluationStatus === 'Failed'"></i>
+                    {{ app.examEvaluationStatus }}
+                  </span>
+                </div>
               </div>
               
               <!-- Action Buttons -->
