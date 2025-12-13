@@ -33,11 +33,31 @@ export class DashboardLayoutComponent implements OnInit {
 
   ngOnInit() {
     // Determine user role based on current route
+    const isAdmin = this.router.url.startsWith('/admin');
     const isApplicant = this.router.url.startsWith('/applicant');
     const userRole = this.authService.getUserRole();
     const userId = this.authService.getUserId();
     
-    if (isApplicant) {
+    if (isAdmin) {
+      // Set menu items for admin
+      this.menuSections.set([
+        {
+          title: 'Management',
+          items: [
+            { label: 'All Applicants', icon: 'people', route: '/admin/applicants' },
+            { label: 'All HRs', icon: 'person-badge', route: '/admin/hrs' },
+            { label: 'All Jobs', icon: 'briefcase', route: '/admin/jobs' },
+          ]
+        }
+      ]);
+
+      // Set admin user info (no profile to fetch)
+      this.user.set({
+        name: 'Admin',
+        email: 'admin@hireai.com',
+        role: 'Administrator'
+      });
+    } else if (isApplicant) {
       // Set menu items for applicant
       this.menuSections.set([
         {
@@ -99,7 +119,6 @@ export class DashboardLayoutComponent implements OnInit {
           title: 'Tools',
           items: [
             { label: 'Create Job', icon: 'plus-circle', route: '/hr/jobs/create' },
-            { label: 'Analytics', icon: 'bar-chart', route: '/hr/analytics' },
             { label: 'Reports', icon: 'file-text', route: '/hr/reports' },
           ]
         },
