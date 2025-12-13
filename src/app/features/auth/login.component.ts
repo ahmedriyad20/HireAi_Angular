@@ -78,6 +78,8 @@ export class LoginComponent implements OnInit {
           this.router.navigate(['/applicant/dashboard']);
         } else if (userRole === 'hr') {
           this.router.navigate(['/hr/dashboard']);
+        } else if (userRole === 'admin' || userRole === 'administrator') {
+          this.router.navigate(['/admin/applicants']);
         } else {
           this.error.set('Unknown user role. Please contact support.');
         }

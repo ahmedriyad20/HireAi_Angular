@@ -20,6 +20,8 @@ export const loginGuard: CanActivateFn = (route, state) => {
       router.navigate(['/hr/dashboard']);
     } else if (userRole === 'Applicant') {
       router.navigate(['/applicant/dashboard']);
+    } else if (userRole === 'Admin' || userRole === 'Administrator') {
+      router.navigate(['/admin/applicants']);
     } else {
       // Fallback to generic dashboard if role is unclear
       router.navigate(['/dashboard']);
