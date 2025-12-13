@@ -1,0 +1,351 @@
+<div class="admin-all-hrs">
+  <!-- Page Header with Search -->
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="page-title">All HRs</h1>
+        <p class="page-subtitle">Manage all HR users in the system</p>
+      </div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-container mt-3">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
+        </span>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Search by HR name..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          (ngModelChange)="$any(searchQuery).set($event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="skeleton-container">
+      @for (skeleton of skeletons; track $index) {
+        <div class="skeleton-card">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-text"></div>
+            <div class="skeleton-line skeleton-text short"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-container">
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+        <div class="flex-grow-1">
+          <strong>Oops! Something went wrong</strong>
+          <p class="mb-0 mt-1">{{ error() }}</p>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button class="btn btn-primary" (click)="loadHRs()">
+          <i class="bi bi-arrow-clockwise me-2"></i> Try Again
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- HRs List -->
+  @else {
+    @if (displayedHRs().length === 0) {
+      <div class="text-center py-5">
+        <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
+        <p class="text-muted">
+          @if (searchQuery()) {
+            No HRs found matching "{{ searchQuery() }}"
+          } @else {
+            No HRs found in the system.
+          }
+        </p>
+      </div>
+    } @else {
+      <div class="hrs-grid">
+        @for (hr of displayedHRs(); track hr.id) {
+          <div class="hr-card-compact">
+            <div class="card-compact-body">
+              <div class="d-flex align-items-start gap-3">
+                <!-- Avatar -->
+                <div class="avatar-compact">
+                  <i class="bi bi-person-badge text-primary"></i>
+                </div>
+                
+                <!-- Info Section -->
+                <div class="flex-grow-1 min-w-0">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <h6 class="mb-0 fw-semibold text-truncate">{{ hr.fullName }}</h6>
+                    <span [class]="getStatusBadgeClass(hr.isActive)" class="text-nowrap">
+                      {{ hr.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                    <span [class]="getAccountTypeBadgeClass(hr.isPremium)" class="text-nowrap">
+                      {{ hr.isPremium ? 'Premium' : 'Free' }}
+                    </span>
+                  </div>
+                  
+                  <p class="text-muted small mb-1 text-truncate">
+                    <i class="bi bi-building me-1"></i>{{ hr.companyName }}
+                  </p>
+                  
+                  @if (hr.title) {
+                    <p class="text-muted small mb-1 text-truncate">
+                      <i class="bi bi-briefcase me-1"></i>{{ hr.title }}
+                    </p>
+                  }
+                  
+                  <div class="compact-details">
+                    <span class="detail-compact">
+                      <i class="bi bi-envelope"></i>
+                      {{ hr.email }}
+                    </span>
+                    <span class="detail-compact">
+                      <i class="bi bi-telephone"></i>
+                      {{ hr.phone }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons-compact">
+                  <button 
+                    class="btn btn-sm btn-primary"
+                    (click)="openUpdateModal(hr)"
+                    title="Update">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-danger"
+                    (click)="openDeleteModal(hr)"
+                    title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Loading More Indicator -->
+      @if (isLoadingMore()) {
+        <div class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading more...</span>
+          </div>
+          <p class="text-muted small mt-2">Loading more HRs...</p>
+        </div>
+      }
+
+      <!-- End of List Message -->
+      @if (!hasMoreData() && displayedHRs().length > 0) {
+        <div class="text-center py-3 text-muted small">
+          <i class="bi bi-check-circle me-1"></i>
+          All HRs loaded ({{ displayedHRs().length }} total)
+        </div>
+      }
+    }
+  }
+
+  <!-- Update Modal -->
+  @if (showUpdateModal()) {
+    <div class="modal-overlay" (click)="closeUpdateModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">Update HR</h5>
+          <button type="button" class="btn-close" (click)="closeUpdateModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().fullName"
+                  name="fullName">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label>
+                <input 
+                  type="tel" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().phone"
+                  name="phone">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().address"
+                  name="address">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Title</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().title"
+                  name="title">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Account Type</label>
+                <select 
+                  class="form-select"
+                  [(ngModel)]="updateForm().accountType"
+                  name="accountType">
+                  <option value="Free">Free</option>
+                  <option value="Premium">Premium</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Bio</label>
+                <textarea 
+                  class="form-control" 
+                  rows="2"
+                  [(ngModel)]="updateForm().bio"
+                  name="bio"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Company Name</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().companyName"
+                  name="companyName">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Company Address</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().companyAddress"
+                  name="companyAddress">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Company Description</label>
+                <textarea 
+                  class="form-control" 
+                  rows="2"
+                  [(ngModel)]="updateForm().companyDescription"
+                  name="companyDescription"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Premium Expiry</label>
+                <input 
+                  type="date" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().premiumExpiry"
+                  name="premiumExpiry">
+              </div>
+              <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [(ngModel)]="updateForm().isPremium"
+                    name="isPremium"
+                    id="isPremium">
+                  <label class="form-check-label" for="isPremium">
+                    Premium Account
+                  </label>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [(ngModel)]="updateForm().isActive"
+                    name="isActive"
+                    id="isActive">
+                  <label class="form-check-label" for="isActive">
+                    Active Account
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeUpdateModal()"
+            [disabled]="isUpdating()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="submitUpdate()"
+            [disabled]="isUpdating()">
+            @if (isUpdating()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Updating...
+            } @else {
+              <i class="bi bi-check-lg me-1"></i>
+              Save Changes
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteModal()) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Delete</h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+            <p class="mt-3">
+              Are you sure you want to delete <strong>{{ hrToDelete()?.fullName }}</strong>?
+            </p>
+            <p class="text-muted small">This action cannot be undone.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeDeleteModal()"
+            [disabled]="isDeleting()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+            [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Deleting...
+            } @else {
+              <i class="bi bi-trash me-1"></i>
+              Delete
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

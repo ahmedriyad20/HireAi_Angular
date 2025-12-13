@@ -75,6 +75,31 @@ export const routes: Routes = [
     ]
   },
 
+  // Admin Routes
+  {
+    path: 'admin',
+    loadComponent: () => import('./layouts/dashboard-layout.component').then(m => m.DashboardLayoutComponent),
+    children: [
+      {
+        path: 'applicants',
+        loadComponent: () => import('./features/admin/admin-all-applicants.component').then(m => m.AdminAllApplicantsComponent)
+      },
+      {
+        path: 'hrs',
+        loadComponent: () => import('./features/admin/admin-all-hrs.component').then(m => m.AdminAllHRsComponent)
+      },
+      {
+        path: 'jobs',
+        loadComponent: () => import('./features/admin/admin-all-jobs.component').then(m => m.AdminAllJobsComponent)
+      },
+      {
+        path: '',
+        redirectTo: 'applicants',
+        pathMatch: 'full'
+      }
+    ]
+  },
+
   // Applicant Routes
   {
     path: 'applicant',

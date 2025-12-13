@@ -1,0 +1,376 @@
+<div class="admin-all-jobs">
+  <!-- Page Header with Search -->
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="page-title">All Jobs</h1>
+        <p class="page-subtitle">Manage all job openings in the system</p>
+      </div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-container mt-3">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
+        </span>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Search by job title or company..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          (ngModelChange)="$any(searchQuery).set($event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="skeleton-container">
+      @for (skeleton of skeletons; track $index) {
+        <div class="skeleton-card">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-text"></div>
+            <div class="skeleton-line skeleton-text short"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-container">
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+        <div class="flex-grow-1">
+          <strong>Oops! Something went wrong</strong>
+          <p class="mb-0 mt-1">{{ error() }}</p>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button class="btn btn-primary" (click)="loadJobs()">
+          <i class="bi bi-arrow-clockwise me-2"></i> Try Again
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Jobs List -->
+  @else {
+    @if (displayedJobs().length === 0) {
+      <div class="text-center py-5">
+        <i class="bi bi-briefcase fs-1 text-muted d-block mb-3"></i>
+        <p class="text-muted">
+          @if (searchQuery()) {
+            No jobs found matching "{{ searchQuery() }}"
+          } @else {
+            No jobs found in the system.
+          }
+        </p>
+      </div>
+    } @else {
+      <div class="jobs-grid">
+        @for (job of displayedJobs(); track job.id) {
+          <div class="job-card-compact">
+            <div class="card-compact-body">
+              <div class="d-flex align-items-start gap-3">
+                <!-- Icon -->
+                <div class="avatar-compact">
+                  <i class="bi bi-briefcase-fill text-primary"></i>
+                </div>
+                
+                <!-- Info Section -->
+                <div class="flex-grow-1 min-w-0">
+                  <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h6 class="mb-0 fw-semibold text-truncate">{{ job.title }}</h6>
+                    <span [class]="getStatusBadgeClass(job.jobStatus)" class="text-nowrap">
+                      {{ job.jobStatus }}
+                    </span>
+                    <span [class]="getExperienceBadgeClass(job.experienceLevel)" class="text-nowrap">
+                      {{ job.experienceLevel }}
+                    </span>
+                  </div>
+                  
+                  <p class="text-muted small mb-1 text-truncate">
+                    <i class="bi bi-building me-1"></i>{{ job.companyName }}
+                  </p>
+                  
+                  <div class="compact-details">
+                    <span class="detail-compact">
+                      <i class="bi bi-geo-alt"></i>
+                      {{ job.location }}
+                    </span>
+                    <span class="detail-compact">
+                      <i class="bi bi-cash"></i>
+                      {{ job.salaryRange }}
+                    </span>
+                    <span class="detail-compact">
+                      <i class="bi bi-people"></i>
+                      {{ job.totalApplications }} applications
+                    </span>
+                    <span class="detail-compact">
+                      <i class="bi bi-check-circle"></i>
+                      {{ job.examsCompleted }} exams completed
+                    </span>
+                  </div>
+
+                  <div class="compact-details mt-1">
+                    <span class="detail-compact">
+                      <i class="bi bi-person-badge"></i>
+                      HR: {{ job.hrName }}
+                    </span>
+                    <span class="detail-compact">
+                      <i class="bi bi-calendar-event"></i>
+                      Deadline: {{ formatDate(job.applicationDeadline) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons-compact">
+                  <button 
+                    class="btn btn-sm btn-primary"
+                    (click)="openUpdateModal(job)"
+                    title="Update">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-danger"
+                    (click)="openDeleteModal(job)"
+                    title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Loading More Indicator -->
+      @if (isLoadingMore()) {
+        <div class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading more...</span>
+          </div>
+          <p class="text-muted small mt-2">Loading more jobs...</p>
+        </div>
+      }
+
+      <!-- End of List Message -->
+      @if (!hasMoreData() && displayedJobs().length > 0) {
+        <div class="text-center py-3 text-muted small">
+          <i class="bi bi-check-circle me-1"></i>
+          All jobs loaded ({{ displayedJobs().length }} total)
+        </div>
+      }
+    }
+  }
+
+  <!-- Update Modal -->
+  @if (showUpdateModal()) {
+    <div class="modal-overlay" (click)="closeUpdateModal()">
+      <div class="modal-content modal-large" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">Update Job Opening</h5>
+          <button type="button" class="btn-close" (click)="closeUpdateModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Job Title</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.title"
+                  name="title">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Company Name</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.companyName"
+                  name="companyName">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea 
+                  class="form-control" 
+                  rows="3"
+                  [(ngModel)]="updateForm.description"
+                  name="description"></textarea>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Job Status</label>
+                <select 
+                  class="form-select"
+                  [(ngModel)]="updateForm.jobStatus"
+                  name="jobStatus">
+                  <option value="Active">Active</option>
+                  <option value="Closed">Closed</option>
+                  <option value="Draft">Draft</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Experience Level</label>
+                <select 
+                  class="form-select"
+                  [(ngModel)]="updateForm.experienceLevel"
+                  name="experienceLevel">
+                  <option value="EntryLevel">Entry Level</option>
+                  <option value="Junior">Junior</option>
+                  <option value="MidLevel">Mid Level</option>
+                  <option value="Senior">Senior</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Employment Type</label>
+                <select 
+                  class="form-select"
+                  [(ngModel)]="updateForm.employmentType"
+                  name="employmentType">
+                  <option value="FullTime">Full Time</option>
+                  <option value="PartTime">Part Time</option>
+                  <option value="Contract">Contract</option>
+                  <option value="Internship">Internship</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Location</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.location"
+                  name="location">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Salary Range</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.salaryRange"
+                  name="salaryRange">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Exam Duration (minutes)</label>
+                <input 
+                  type="number" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.examDurationMinutes"
+                  name="examDurationMinutes">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Number of Questions</label>
+                <input 
+                  type="number" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.numberOfQuestions"
+                  name="numberOfQuestions">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">ATS Minimum Score</label>
+                <input 
+                  type="number" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.atsMinimumScore"
+                  name="atsMinimumScore">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Application Deadline</label>
+                <input 
+                  type="date" 
+                  class="form-control"
+                  [(ngModel)]="updateForm.applicationDeadline"
+                  name="applicationDeadline">
+              </div>
+              <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [(ngModel)]="updateForm.autoSend"
+                    name="autoSend"
+                    id="autoSend">
+                  <label class="form-check-label" for="autoSend">
+                    Auto Send Results
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeUpdateModal()"
+            [disabled]="isUpdating()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="submitUpdate()"
+            [disabled]="isUpdating()">
+            @if (isUpdating()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Updating...
+            } @else {
+              <i class="bi bi-check-lg me-1"></i>
+              Save Changes
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteModal()) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Delete</h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+            <p class="mt-3">
+              Are you sure you want to delete <strong>{{ jobToDelete()?.title }}</strong>?
+            </p>
+            <p class="text-muted small">This action cannot be undone.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeDeleteModal()"
+            [disabled]="isDeleting()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+            [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Deleting...
+            } @else {
+              <i class="bi bi-trash me-1"></i>
+              Delete
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,327 @@
+<div class="admin-all-applicants">
+  <!-- Page Header with Search -->
+  <div class="page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <h1 class="page-title">All Applicants</h1>
+        <p class="page-subtitle">Manage all applicants in the system</p>
+      </div>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-container mt-3">
+      <div class="input-group">
+        <span class="input-group-text">
+          <i class="bi bi-search"></i>
+        </span>
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Search by applicant name..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          (ngModelChange)="$any(searchQuery).set($event)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="skeleton-container">
+      @for (skeleton of skeletons; track $index) {
+        <div class="skeleton-card">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-text"></div>
+            <div class="skeleton-line skeleton-text short"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-container">
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+        <div class="flex-grow-1">
+          <strong>Oops! Something went wrong</strong>
+          <p class="mb-0 mt-1">{{ error() }}</p>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <button class="btn btn-primary" (click)="loadApplicants()">
+          <i class="bi bi-arrow-clockwise me-2"></i> Try Again
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Applicants List -->
+  @else {
+    @if (displayedApplicants().length === 0) {
+      <div class="text-center py-5">
+        <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
+        <p class="text-muted">
+          @if (searchQuery()) {
+            No applicants found matching "{{ searchQuery() }}"
+          } @else {
+            No applicants found in the system.
+          }
+        </p>
+      </div>
+    } @else {
+      <div class="applicants-grid">
+        @for (applicant of displayedApplicants(); track applicant.id) {
+          <div class="applicant-card-compact">
+            <div class="card-compact-body">
+              <div class="d-flex align-items-start gap-3">
+                <!-- Avatar -->
+                <div class="avatar-compact">
+                  <i class="bi bi-person-circle text-primary"></i>
+                </div>
+                
+                <!-- Info Section -->
+                <div class="flex-grow-1 min-w-0">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <h6 class="mb-0 fw-semibold text-truncate">{{ applicant.fullName }}</h6>
+                    <span [class]="getStatusBadgeClass(applicant.isActive)" class="text-nowrap">
+                      {{ applicant.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                    <span [class]="getSkillLevelBadgeClass(applicant.skillLevel)" class="text-nowrap">
+                      {{ applicant.skillLevel }}
+                    </span>
+                  </div>
+                  
+                  @if (applicant.title) {
+                    <p class="text-muted small mb-1 text-truncate">
+                      <i class="bi bi-briefcase me-1"></i>{{ applicant.title }}
+                    </p>
+                  }
+                  
+                  <div class="compact-details">
+                    <span class="detail-compact">
+                      <i class="bi bi-envelope"></i>
+                      {{ applicant.email }}
+                    </span>
+                    <span class="detail-compact">
+                      <i class="bi bi-telephone"></i>
+                      {{ applicant.phone }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons-compact">
+                  <button 
+                    class="btn btn-sm btn-primary"
+                    (click)="openUpdateModal(applicant)"
+                    title="Update">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-danger"
+                    (click)="openDeleteModal(applicant)"
+                    title="Delete">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                  @if (applicant.resumeUrl) {
+                    <button 
+                      class="btn btn-sm btn-outline-secondary"
+                      (click)="downloadResume(applicant.resumeUrl)"
+                      title="Download Resume">
+                      <i class="bi bi-file-earmark-pdf"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Loading More Indicator -->
+      @if (isLoadingMore()) {
+        <div class="text-center py-3">
+          <div class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Loading more...</span>
+          </div>
+          <p class="text-muted small mt-2">Loading more applicants...</p>
+        </div>
+      }
+
+      <!-- End of List Message -->
+      @if (!hasMoreData() && displayedApplicants().length > 0) {
+        <div class="text-center py-3 text-muted small">
+          <i class="bi bi-check-circle me-1"></i>
+          All applicants loaded ({{ displayedApplicants().length }} total)
+        </div>
+      }
+    }
+  }
+
+  <!-- Update Modal (unchanged) -->
+  @if (showUpdateModal()) {
+    <div class="modal-overlay" (click)="closeUpdateModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">Update Applicant</h5>
+          <button type="button" class="btn-close" (click)="closeUpdateModal()"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Full Name</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().fullName"
+                  name="fullName">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input 
+                  type="email" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().email"
+                  name="email">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label>
+                <input 
+                  type="tel" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().phone"
+                  name="phone">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Date of Birth</label>
+                <input 
+                  type="date" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().dateOfBirth"
+                  name="dateOfBirth">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Address</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().address"
+                  name="address">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Title</label>
+                <input 
+                  type="text" 
+                  class="form-control"
+                  [(ngModel)]="updateForm().title"
+                  name="title">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Skill Level</label>
+                <select 
+                  class="form-select"
+                  [(ngModel)]="updateForm().skillLevel"
+                  name="skillLevel">
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Bio</label>
+                <textarea 
+                  class="form-control" 
+                  rows="3"
+                  [(ngModel)]="updateForm().bio"
+                  name="bio"></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input 
+                    type="checkbox" 
+                    class="form-check-input"
+                    [(ngModel)]="updateForm().isActive"
+                    name="isActive"
+                    id="isActive">
+                  <label class="form-check-label" for="isActive">
+                    Active Account
+                  </label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeUpdateModal()"
+            [disabled]="isUpdating()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="submitUpdate()"
+            [disabled]="isUpdating()">
+            @if (isUpdating()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Updating...
+            } @else {
+              <i class="bi bi-check-lg me-1"></i>
+              Save Changes
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Delete Confirmation Modal (unchanged) -->
+  @if (showDeleteModal()) {
+    <div class="modal-overlay" (click)="closeDeleteModal()">
+      <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Delete</h5>
+          <button type="button" class="btn-close" (click)="closeDeleteModal()"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+            <p class="mt-3">
+              Are you sure you want to delete <strong>{{ applicantToDelete()?.fullName }}</strong>?
+            </p>
+            <p class="text-muted small">This action cannot be undone.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="closeDeleteModal()"
+            [disabled]="isDeleting()">
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+            [disabled]="isDeleting()">
+            @if (isDeleting()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Deleting...
+            } @else {
+              <i class="bi bi-trash me-1"></i>
+              Delete
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
