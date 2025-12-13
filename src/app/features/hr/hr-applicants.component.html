@@ -103,7 +103,18 @@
                 <!-- Applications List -->
                 <div class="applications-list">
                   <div class="applications-header">
-                    <h4>Applications ({{ getJobState(job.jobId)?.applications?.length || 0 }})</h4>
+                    <div class="header-top">
+                      <h4>Applications ({{ getFilteredApplications(job.jobId)?.length || 0 }})</h4>
+                    </div>
+                    <div class="search-box">
+                      <input 
+                        type="text"
+                        class="form-control form-control-sm"
+                        placeholder="Search by applicant name..."
+                        [value]="getJobState(job.jobId)?.searchQuery || ''"
+                        (input)="onSearchChange(job.jobId, $event.target.value)"
+                        title="Type applicant name to filter">
+                    </div>
                   </div>
 
                   @for (application of getVisibleApplications(job.jobId); track application.applicationId) {

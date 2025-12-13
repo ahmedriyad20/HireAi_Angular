@@ -155,13 +155,12 @@
                       <td>
                         <div class="d-flex gap-2">
                           @if (app.applicantCVlink) {
-                            <a [href]="app.applicantCVlink" 
-                               target="_blank"
+                            <button (click)="downloadCV(app.applicantCVlink, app.applicantName)"
                                class="btn btn-sm btn-outline-primary" 
-                               title="View CV">
-                              <i class="bi bi-file-earmark-pdf me-1"></i>
+                               title="Download CV">
+                              <i class="bi bi-download me-1"></i>
                               CV
-                            </a>
+                            </button>
                           }
                           @if (app.examResultLink) {
                             <a [href]="app.examResultLink" 

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { HrApplicantsService } from '../../core/services/hr-applicants.service';
 import { AuthService } from '../../core/services/auth.service';
 import { HrJobSummary, JobApplication, JobApplicationsData } from '../../core/models/hr-applicants.model';
@@ -11,6 +12,7 @@ interface ExpandedJobState {
   jobDetails: JobApplicationsData | null;
   visibleCount: number;
   error: string | null;
+  searchQuery: string;
 }
 
 @Component({
@@ -23,6 +25,8 @@ interface ExpandedJobState {
 export class HrApplicantsComponent implements OnInit {
   private applicantsService = inject(HrApplicantsService);
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:5290/api/Applicant';
 
   // State signals
   jobs = signal<HrJobSummary[]>([]);
@@ -118,20 +122,29 @@ export class HrApplicantsComponent implements OnInit {
       applications: [],
       jobDetails: null,
       visibleCount: this.INITIAL_VISIBLE_COUNT,
-      error: null
+      error: null,
+      searchQuery: ''
     });
     this.expandedJobs.set(new Map(currentExpandedJobs));
 
     this.applicantsService.getJobApplications(job.jobId, hrId).subscribe({
       next: (response) => {
         if (response.success && response.data) {
+          // Sort applications by Applied On date in descending order (newest first)
+          const sortedApplications = (response.data.applications || []).sort((a, b) => {
+            const dateA = new Date(a.dateApplied).getTime();
+            const dateB = new Date(b.dateApplied).getTime();
+            return dateB - dateA;
+          });
+
           currentExpandedJobs.set(job.jobId, {
             isExpanded: true,
             isLoading: false,
-            applications: response.data.applications || [],
+            applications: sortedApplications,
             jobDetails: response.data,
             visibleCount: this.INITIAL_VISIBLE_COUNT,
-            error: null
+            error: null,
+            searchQuery: ''
           });
           this.expandedJobs.set(new Map(currentExpandedJobs));
         } else {
@@ -141,7 +154,8 @@ export class HrApplicantsComponent implements OnInit {
             applications: [],
             jobDetails: null,
             visibleCount: this.INITIAL_VISIBLE_COUNT,
-            error: response.message || 'Failed to load applications'
+            error: response.message || 'Failed to load applications',
+            searchQuery: ''
           });
           this.expandedJobs.set(new Map(currentExpandedJobs));
         }
@@ -154,7 +168,8 @@ export class HrApplicantsComponent implements OnInit {
           applications: [],
           jobDetails: null,
           visibleCount: this.INITIAL_VISIBLE_COUNT,
-          error: 'Failed to load applications. Please try again.'
+          error: 'Failed to load applications. Please try again.',
+          searchQuery: ''
         });
         this.expandedJobs.set(new Map(currentExpandedJobs));
       }
@@ -178,6 +193,52 @@ export class HrApplicantsComponent implements OnInit {
   }
 
   /**
+   * Update search query for a job
+   */
+  onSearchChange(jobId: number, searchQuery: string): void {
+    const currentExpandedJobs = this.expandedJobs();
+    const jobState = currentExpandedJobs.get(jobId);
+    
+    if (jobState) {
+      currentExpandedJobs.set(jobId, {
+        ...jobState,
+        searchQuery: searchQuery,
+        visibleCount: this.INITIAL_VISIBLE_COUNT // Reset visible count when searching
+      });
+      this.expandedJobs.set(new Map(currentExpandedJobs));
+    }
+  }
+
+  /**
+   * Get filtered applications based on search query
+   */
+  getFilteredApplications(jobId: number): JobApplication[] {
+    const jobState = this.getJobState(jobId);
+    if (!jobState) return [];
+    
+    const query = jobState.searchQuery.toLowerCase().trim();
+    
+    if (!query) {
+      return jobState.applications;
+    }
+    
+    return jobState.applications.filter(app => 
+      app.applicantName.toLowerCase().includes(query)
+    );
+  }
+
+  /**
+   * Get visible applications for a job
+   */
+  getVisibleApplications(jobId: number): JobApplication[] {
+    const filteredApplications = this.getFilteredApplications(jobId);
+    const jobState = this.getJobState(jobId);
+    
+    if (!jobState) return [];
+    return filteredApplications.slice(0, jobState.visibleCount);
+  }
+
+  /**
    * Get the expanded state for a job
    */
   getJobState(jobId: number): ExpandedJobState | undefined {
@@ -192,21 +253,13 @@ export class HrApplicantsComponent implements OnInit {
   }
 
   /**
-   * Get visible applications for a job
-   */
-  getVisibleApplications(jobId: number): JobApplication[] {
-    const jobState = this.getJobState(jobId);
-    if (!jobState) return [];
-    return jobState.applications.slice(0, jobState.visibleCount);
-  }
-
-  /**
    * Check if there are more applications to load
    */
   hasMoreApplications(jobId: number): boolean {
     const jobState = this.getJobState(jobId);
     if (!jobState) return false;
-    return jobState.visibleCount < jobState.applications.length;
+    const filteredApplications = this.getFilteredApplications(jobId);
+    return jobState.visibleCount < filteredApplications.length;
   }
 
   /**
@@ -248,17 +301,76 @@ export class HrApplicantsComponent implements OnInit {
   }
 
   /**
-   * Download CV
+   * Download CV using the backend DownloadResume endpoint
    */
   downloadCV(cvKey: string): void {
-    // If cvKey is a full URL, open it
-    if (cvKey.startsWith('http')) {
-      window.open(cvKey, '_blank');
-    } else {
-      // Otherwise, construct the full URL (adjust base URL as needed)
-      const baseUrl = 'http://localhost:5290/';
-      window.open(`${baseUrl}${cvKey}`, '_blank');
+    if (!cvKey) {
+      console.error('CV key is missing');
+      return;
     }
+
+    // Debug: Check authentication
+    const token = this.authService.getToken();
+    const userRole = this.authService.getUserRole();
+    console.log('Token exists:', !!token);
+    console.log('User role:', userRole);
+    
+    if (!token) {
+      console.error('No authentication token found');
+      alert('You must be logged in to download CVs.');
+      return;
+    }
+
+    // Extract fileKey and encode it
+    const fileKey = encodeURIComponent(cvKey);
+    const downloadUrl = `${this.apiUrl}/DownloadResume?fileKey=${fileKey}`;
+    
+    console.log('Downloading CV from:', downloadUrl);
+
+    // Use HttpClient to download the file as a blob
+    this.http.get(downloadUrl, { responseType: 'blob', observe: 'response' }).subscribe({
+      next: (response) => {
+        // Extract filename from content-disposition header
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = `CV.pdf`;
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename\*?=["']?(?:UTF-8'')?([^"';]+)["']?/i);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(filenameMatch[1]);
+          }
+        }
+
+        // Create blob URL and trigger download
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        }
+      },
+      error: (error) => {
+        console.error('Error downloading CV:', error);
+        
+        // Provide more specific error messages
+        if (error.status === 403) {
+          console.error('403 Forbidden - Possible reasons:');
+          console.error('1. User role mismatch (check if role in token is exactly "HR")');
+          console.error('2. Token is invalid or expired');
+          console.error('3. Backend authorization configuration issue');
+          alert('Access denied. You do not have permission to download this CV.\n\nPlease check:\n- You are logged in as HR\n- Your session has not expired');
+        } else if (error.status === 401) {
+          alert('Unauthorized. Please log in again.');
+        } else if (error.status === 404) {
+          alert('CV file not found.');
+        } else {
+          alert('Failed to download CV. Please try again.');
+        }
+      }
+    });
   }
 
   /**

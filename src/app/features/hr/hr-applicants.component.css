@@ -252,7 +252,11 @@
 }
 
 .applications-header {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.applications-header .header-top {
+  margin-bottom: 0.75rem;
 }
 
 .applications-header h4 {
@@ -260,6 +264,25 @@
   font-weight: 600;
   color: #1f2937;
   margin: 0;
+}
+
+.search-box {
+  width: 100%;
+}
+
+.search-box input {
+  border-color: #d1d5db;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.search-box input::placeholder {
+  color: #9ca3af;
+}
+
+.search-box input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 /* Application Card */

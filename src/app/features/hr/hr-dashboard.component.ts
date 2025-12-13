@@ -1,6 +1,7 @@
 ﻿import { Component, signal, OnInit, inject, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { StatCardComponent, StatCardData } from '../../shared/components/stat-card.component';
 import { HRDashboardService } from '../../core/services/hr-dashboard.service';
 import { HRDashboardData, RecentApplication, ActiveJobPosting } from '../../core/models/dashboard.model';
@@ -20,6 +21,8 @@ Chart.register(...registerables);
 export class HrDashboardComponent implements OnInit, AfterViewInit {
   private dashboardService = inject(HRDashboardService);
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
+  private apiUrl = 'http://localhost:5290/api/Applicant';
 
   @ViewChild('monthlyApplicantsChart') monthlyApplicantsChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('atsPassedChart') atsPassedChartRef!: ElementRef<HTMLCanvasElement>;
@@ -335,5 +338,76 @@ export class HrDashboardComponent implements OnInit, AfterViewInit {
 
   retryLoad(): void {
     this.loadDashboardData();
+  }
+
+  downloadCV(cvLink: string, applicantName: string): void {
+    if (!cvLink) {
+      console.error('CV link is missing');
+      return;
+    }
+
+    // Debug: Check authentication
+    const token = this.authService.getToken();
+    const userRole = this.authService.getUserRole();
+    console.log('Token exists:', !!token);
+    console.log('User role:', userRole);
+    
+    if (!token) {
+      console.error('No authentication token found');
+      alert('You must be logged in to download CVs.');
+      return;
+    }
+
+    // Extract fileKey from the cvLink
+    // The cvLink is the S3 key like: "cv/1139f78b-58d4-40ae-ae91-9a1d8d897c7f_ahmed_Egndy_cv (8).pdf"
+    const fileKey = encodeURIComponent(cvLink);
+    const downloadUrl = `${this.apiUrl}/DownloadResume?fileKey=${fileKey}`;
+    
+    console.log('Downloading CV from:', downloadUrl);
+
+    // Use HttpClient to download the file as a blob
+    this.http.get(downloadUrl, { responseType: 'blob', observe: 'response' }).subscribe({
+      next: (response) => {
+        // Extract filename from content-disposition header
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = `${applicantName}_CV.pdf`;
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename\*?=["']?(?:UTF-8'')?([^"';]+)["']?/i);
+          if (filenameMatch && filenameMatch[1]) {
+            filename = decodeURIComponent(filenameMatch[1]);
+          }
+        }
+
+        // Create blob URL and trigger download
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+          window.URL.revokeObjectURL(url);
+        }
+      },
+      error: (error) => {
+        console.error('Error downloading CV:', error);
+        
+        // Provide more specific error messages
+        if (error.status === 403) {
+          console.error('403 Forbidden - Possible reasons:');
+          console.error('1. User role mismatch (check if role in token is exactly "HR")');
+          console.error('2. Token is invalid or expired');
+          console.error('3. Backend authorization configuration issue');
+          alert('Access denied. You do not have permission to download this CV.\n\nPlease check:\n- You are logged in as HR\n- Your session has not expired');
+        } else if (error.status === 401) {
+          alert('Unauthorized. Please log in again.');
+        } else if (error.status === 404) {
+          alert('CV file not found.');
+        } else {
+          alert('Failed to download CV. Please try again.');
+        }
+      }
+    });
   }
 }
