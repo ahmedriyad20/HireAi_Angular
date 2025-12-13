@@ -138,6 +138,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/applicant/mock-exams.component').then(m => m.MockExamsComponent)
       },
       {
+        path: 'mock-exam/:examId',
+        loadComponent: () => import('./features/applicant/mock-exam.component').then(m => m.MockExamComponent)
+      },
+      {
+        path: 'mock-exam-results',
+        loadComponent: () => import('./features/applicant/mock-exam-results.component').then(m => m.MockExamResultsComponent)
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./features/applicant/my-profile.component').then(m => m.MyProfileComponent)
       },

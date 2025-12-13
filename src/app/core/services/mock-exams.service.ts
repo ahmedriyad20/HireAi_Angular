@@ -40,4 +40,16 @@ export class MockExamsService {
     console.log('Fetching all exams from:', url);
     return this.http.get<MockExam[]>(url);
   }
+
+  getMockExamById(examId: number): Observable<any> {
+    const url = `${this.baseUrl}/MockExamByAI/${examId}`;
+    console.log('Fetching mock exam from:', url);
+    return this.http.post<any>(url, {});
+  }
+
+  evaluateMockExam(evaluation: any): Observable<any> {
+    const url = `${this.baseUrl}/evaluate`;
+    console.log('Submitting mock exam evaluation to:', url);
+    return this.http.post<any>(url, evaluation);
+  }
 }

@@ -1,6 +1,7 @@
 ﻿import { Component, signal, OnInit, inject, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MockExamsService, MockExamQuickStats, MockExam as ApiMockExam } from '../../core/services/mock-exams.service';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -17,6 +18,7 @@ interface MockExam extends ApiMockExam {
 })
 export class MockExamsComponent implements OnInit {
   private mockExamsService = inject(MockExamsService);
+  private router = inject(Router);
   authService = inject(AuthService);
   
   selectedCategory = 'all';
@@ -211,5 +213,9 @@ export class MockExamsComponent implements OnInit {
       case 'Advanced': return 'danger';
       default: return 'secondary';
     }
+  }
+
+  startExam(examId: number): void {
+    this.router.navigate(['/applicant/mock-exam', examId]);
   }
 }

@@ -1,0 +1,236 @@
+<div class="job-exam-page">
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading exam...</span>
+      </div>
+      <p class="mt-3 text-muted">Preparing your mock exam...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error() && !isLoading()) {
+    <div class="error-container">
+      <div class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Error:</strong> {{ error() }}
+      </div>
+      <button class="btn btn-primary" (click)="retryLoadExam()">
+        <i class="bi bi-arrow-clockwise me-1"></i>
+        Retry
+      </button>
+    </div>
+  }
+
+  <!-- Exam Content -->
+  @if (!isLoading() && !error()) {
+    <div class="exam-container">
+      <!-- Header -->
+      <div class="exam-header">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h2 class="exam-title mb-1">Mock Exam</h2>
+            <p class="text-muted mb-0">Practice exam - Answer all questions to complete</p>
+          </div>
+          <div class="timer-container" [class.timer-critical]="isTimeCritical">
+            <i class="bi bi-clock me-2"></i>
+            <span class="timer-text">{{ formattedTimeRemaining }}</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="progress-text">
+              Question {{ currentQuestionIndex() + 1 }} of {{ totalQuestions }}
+            </span>
+            <span class="progress-text">
+              Answered: {{ answeredCount }} / {{ totalQuestions }}
+            </span>
+          </div>
+          <div class="progress" style="height: 8px;">
+            <div 
+              class="progress-bar bg-primary" 
+              role="progressbar" 
+              [style.width.%]="(answeredCount / totalQuestions) * 100">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Navigation Dots -->
+      <div class="question-nav mb-4">
+        @for (question of questions(); track question.id) {
+          <button
+            class="nav-dot"
+            [class.active]="currentQuestionIndex() === $index"
+            [class.answered]="isQuestionAnswered(question.questionNumber)"
+            (click)="goToQuestion($index)"
+            [attr.title]="'Question ' + question.questionNumber">
+            {{ question.questionNumber }}
+          </button>
+        }
+      </div>
+
+      <!-- Question Card -->
+      @if (currentQuestion) {
+        <div class="question-card">
+          <div class="question-header">
+            <span class="question-badge">Question {{ currentQuestion!.questionNumber }}</span>
+          </div>
+          
+          <div class="question-body">
+            <h4 class="question-text">{{ currentQuestion!.questionText }}</h4>
+            
+            <div class="answers-section mt-4">
+              @for (choice of currentQuestion!.answerChoices; track $index) {
+                <div 
+                  class="answer-option"
+                  [class.selected]="isAnswerSelected($index)"
+                  (click)="selectAnswer($index)">
+                  <div class="answer-radio">
+                    <input 
+                      type="radio" 
+                      [id]="'answer-' + $index"
+                      [name]="'question-' + currentQuestion!.id"
+                      [checked]="isAnswerSelected($index)"
+                      (change)="selectAnswer($index)">
+                    <label [for]="'answer-' + $index"></label>
+                  </div>
+                  <div class="answer-content">
+                    <span class="answer-label">{{ getAnswerLabel($index) }}.</span>
+                    <span class="answer-text">{{ choice }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Navigation Buttons -->
+      <div class="exam-navigation mt-4">
+        <button 
+          class="btn btn-outline-secondary"
+          [disabled]="currentQuestionIndex() === 0"
+          (click)="previousQuestion()">
+          <i class="bi bi-arrow-left me-1"></i>
+          Previous
+        </button>
+
+        <div class="d-flex gap-2">
+          @if (currentQuestionIndex() < totalQuestions - 1) {
+            <button 
+              class="btn btn-primary"
+              (click)="nextQuestion()">
+              Next
+              <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          } @else {
+            <button 
+              class="btn btn-success"
+              [disabled]="!canSubmit"
+              (click)="openSubmitConfirmation()">
+              <i class="bi bi-check-circle me-1"></i>
+              Submit Exam
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Submit Button (Always Visible) -->
+      @if (answeredCount === totalQuestions) {
+        <div class="submit-section mt-3">
+          <div class="alert alert-success d-flex justify-content-between align-items-center">
+            <div>
+              <i class="bi bi-check-circle-fill me-2"></i>
+              All questions answered! You can submit your exam now.
+            </div>
+            <button 
+              class="btn btn-success"
+              (click)="openSubmitConfirmation()">
+              <i class="bi bi-send me-1"></i>
+              Submit Exam
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Submit Confirmation Modal -->
+@if (showSubmitConfirmation()) {
+  <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h5 class="modal-title">
+            <i class="bi bi-question-circle text-warning me-2"></i>
+            Submit Mock Exam?
+          </h5>
+          <button 
+            type="button" 
+            class="btn-close" 
+            (click)="closeSubmitConfirmation()"
+            [disabled]="isSubmitting()">
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-3">Are you sure you want to submit your mock exam?</p>
+          
+          <div class="alert alert-light border">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Total Questions:</span>
+              <strong>{{ totalQuestions }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span>Answered:</span>
+              <strong>{{ answeredCount }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span>Unanswered:</span>
+              <strong class="text-danger">{{ totalQuestions - answeredCount }}</strong>
+            </div>
+          </div>
+
+          @if (answeredCount < totalQuestions) {
+            <p class="text-warning small mb-0">
+              <i class="bi bi-exclamation-triangle me-1"></i>
+              You have unanswered questions. They will be marked as incorrect.
+            </p>
+          }
+          
+          <p class="text-muted small mb-0 mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+            This is a practice exam. Your results will help track your progress.
+          </p>
+        </div>
+        <div class="modal-footer border-0">
+          <button 
+            type="button" 
+            class="btn btn-secondary" 
+            (click)="closeSubmitConfirmation()"
+            [disabled]="isSubmitting()">
+            <i class="bi bi-x-circle me-1"></i>
+            Cancel
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-success" 
+            (click)="submitExam()"
+            [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+              Submitting...
+            } @else {
+              <i class="bi bi-send me-1"></i>
+              Yes, Submit
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
