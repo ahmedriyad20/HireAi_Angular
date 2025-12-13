@@ -24,12 +24,23 @@ export class HeaderComponent {
   searchQuery = '';
 
   // Computed properties for dynamic routes
+  isAdmin = computed(() => {
+    return this.router.url.startsWith('/admin');
+  });
+
   profileRoute = computed(() => {
+    if (this.isAdmin()) return '/admin/applicants'; // Admin has no profile
     return this.router.url.startsWith('/hr') ? '/hr/profile' : '/applicant/profile';
   });
 
   settingsRoute = computed(() => {
+    if (this.isAdmin()) return '/admin/applicants'; // Admin has no settings
     return this.router.url.startsWith('/hr') ? '/hr/settings' : '/applicant/settings';
+  });
+
+  jobsRoute = computed(() => {
+    if (this.isAdmin()) return '/admin/jobs';
+    return this.router.url.startsWith('/hr') ? '/hr/jobs' : '/applicant/jobs';
   });
 
   constructor(private router: Router) {}
@@ -44,12 +55,13 @@ export class HeaderComponent {
   }
 
   handleSearch(): void {
+    const route = this.jobsRoute();
     if (this.searchQuery.trim()) {
-      this.router.navigate(['/applicant/jobs'], {
+      this.router.navigate([route], {
         queryParams: { search: this.searchQuery.trim() }
       });
     } else {
-      this.router.navigate(['/applicant/jobs']);
+      this.router.navigate([route]);
     }
   }
 }

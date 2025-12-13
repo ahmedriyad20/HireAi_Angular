@@ -7,7 +7,7 @@
   (drop)="onDrop($event)">
   
   <div class="file-upload-icon">
-    <i class="bi bi-cloud-upload"></i>
+    <i class="bi" [ngClass]="selectedFile() ? 'bi-file-pdf' : 'bi-cloud-upload'"></i>
   </div>
   
   @if (selectedFile()) {
