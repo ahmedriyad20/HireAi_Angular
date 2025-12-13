@@ -1,6 +1,6 @@
 import { Component, signal, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HRJobsService } from '../../core/services/hr-jobs.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -16,6 +16,7 @@ import { JobOpening, JobStatus, ExperienceLevel, EmploymentType } from '../../co
 export class HrJobsComponent implements OnInit {
   private jobsService = inject(HRJobsService);
   private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
 
   jobs = signal<JobOpening[]>([]);
   isLoading = signal<boolean>(true);
@@ -76,9 +77,15 @@ export class HrJobsComponent implements OnInit {
     closed: this.jobs().filter(j => j.jobStatus === 'Closed').length,
     totalApplications: this.jobs().reduce((sum, j) => sum + (j.totalApplications || 0), 0)
   }));
-
   ngOnInit(): void {
     this.loadJobs();
+    
+    // Listen for query parameters from search
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchQuery.set(params['search']);
+      }
+    });
   }
 
   loadJobs(): void {
