@@ -106,6 +106,7 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     if (!this.profile()) return;
     
     const currentProfile = this.profile()!;
+    console.log('Entering edit mode - Current profile resumeUrl:', currentProfile.resumeUrl);
     this.editForm = {
       fullName: currentProfile.name,
       email: currentProfile.email, // Store email for API but hide from UI
@@ -113,11 +114,11 @@ export class MyProfileComponent implements OnInit, OnDestroy {
       dateOfBirth: currentProfile.dateOfBirth,
       title: currentProfile.title,
       bio: currentProfile.bio,
-      resumeUrl: currentProfile.resumeUrl,
+      resumeUrl: currentProfile.resumeUrl || 'resume.pdf', // Use existing value, fallback to default
       skillLevel: currentProfile.skillLevel,
       address: currentProfile.address || ''
     };
-    
+    console.log('Edit form resumeUrl set to:', this.editForm.resumeUrl);
     this.isEditMode.set(true);
   }
 
@@ -149,71 +150,74 @@ export class MyProfileComponent implements OnInit, OnDestroy {
     
     // Check if a new CV file is uploaded
     if (this.resumeFile) {
-      // Use FormData for file upload with PascalCase to match C# [FromForm] binding
-      const formData = new FormData();
-      
-      // Format date for C# DateOnly (YYYY-MM-DD format only, no time)
-      const dateOnly = this.editForm.dateOfBirth.split('T')[0]; // Remove time part if present
-      
-      // Use PascalCase property names to match C# ApplicantUpdateDto properties
-      formData.append('Id', currentProfile.id.toString());
-      formData.append('Email', this.editForm.email);
-      formData.append('FullName', this.editForm.fullName);
-      formData.append('Address', this.editForm.address || '');
-      formData.append('Phone', this.editForm.phone);
-      formData.append('DateOfBirth', dateOnly);
-      formData.append('Title', this.editForm.title);
-      formData.append('Bio', this.editForm.bio || '');
-      formData.append('SkillLevel', this.editForm.skillLevel);
-      formData.append('CvFile', this.resumeFile, this.resumeFile.name);
-      
-      // Debug logging - comprehensive
-      console.log('=== FormData Debug Info ===');
-      console.log('Applicant ID:', applicantId);
-      console.log('Current Profile ID:', currentProfile.id);
-      console.log('Edit Form Data:', this.editForm);
-      console.log('FormData entries:');
-      formData.forEach((value, key) => {
-        console.log(`  ${key}: ${value instanceof File ? `[File: ${value.name}]` : value}`);
-      });
-      console.log('=========================');
-      
-      this.profileService
-        .updateApplicantProfileWithFile(applicantId, formData)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe({
-          next: (updatedProfile) => {
-            console.log('Profile updated successfully with file:', updatedProfile);
-            this.profile.set(updatedProfile);
-            this.isEditMode.set(false);
-            this.isSaving.set(false);
-            this.resumeFile = null;
-          },
-          error: (err) => {
-            this.handleUpdateError(err);
-          }
-        });
+      // Read file as base64 string
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        const base64String = e.target?.result as string;
+        
+        // Format date for C# DateOnly (YYYY-MM-DD format only, no time)
+        const dateOnly = this.editForm.dateOfBirth.split('T')[0]; // Remove time part if present
+        
+        const updateRequest: UpdateApplicantProfileRequest = {
+          id: currentProfile.id,
+          fullName: this.editForm.fullName,
+          email: this.editForm.email,
+          dateOfBirth: dateOnly,
+          phone: this.editForm.phone,
+          bio: this.editForm.bio,
+          title: this.editForm.title,
+          skillLevel: this.editForm.skillLevel,
+          address: this.editForm.address,
+          resumeUrl: base64String // Send base64 encoded file as resumeUrl
+        };
+        
+        console.log('=== Profile Update with File ===');
+        console.log('Applicant ID:', applicantId);
+        console.log('File name:', this.resumeFile?.name);
+        console.log('Base64 string length:', base64String.length);
+        console.log('ResumeUrl being sent (base64):', updateRequest.resumeUrl?.substring(0, 100) + '...');
+        console.log('Update Request:', updateRequest);
+        console.log('==============================');
+        
+        this.profileService
+          .updateApplicantProfile(applicantId, updateRequest)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (updatedProfile) => {
+              console.log('Profile updated successfully with file:', updatedProfile);
+              this.profile.set(updatedProfile);
+              this.isEditMode.set(false);
+              this.isSaving.set(false);
+              this.resumeFile = null;
+            },
+            error: (err) => {
+              this.handleUpdateError(err);
+            }
+          });
+      };
+      reader.readAsDataURL(this.resumeFile);
     } else {
       // Use regular JSON update without file
+      const dateOnly = this.editForm.dateOfBirth.split('T')[0]; // Remove time part if present
+      
       const updateRequest: UpdateApplicantProfileRequest = {
         id: currentProfile.id,
         fullName: this.editForm.fullName,
         email: this.editForm.email,
-        dateOfBirth: this.editForm.dateOfBirth,
+        dateOfBirth: dateOnly,
         phone: this.editForm.phone,
         bio: this.editForm.bio,
         title: this.editForm.title,
-        resumeUrl: this.editForm.resumeUrl,
         skillLevel: this.editForm.skillLevel,
-        role: 'Applicant',
-        isPremium: false,
-        isActive: currentProfile.isActive,
-        lastLogin: currentProfile.lastLogin,
-        createdAt: currentProfile.createdAt,
         address: this.editForm.address,
-        cvId: currentProfile.cvId,
-        applicantSkills: currentProfile.applicantSkills
+        resumeUrl: this.editForm.resumeUrl || currentProfile.resumeUrl || 'resume.pdf' // Ensure not null
       };
+      
+      console.log('=== Profile Update without File ===');
+      console.log('Applicant ID:', applicantId);
+      console.log('ResumeUrl being sent:', updateRequest.resumeUrl);
+      console.log('Update Request:', updateRequest);
+      console.log('=====================================');
       
       this.profileService
         .updateApplicantProfile(applicantId, updateRequest)

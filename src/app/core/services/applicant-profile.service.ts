@@ -47,26 +47,4 @@ export class ApplicantProfileService {
       }))
     );
   }
-
-  updateApplicantProfileWithFile(applicantId: number, formData: FormData): Observable<ApplicantProfile> {
-    const url = `${this.apiUrl}/${applicantId}`;
-    console.log('Updating profile with file at URL:', url);
-    console.log('FormData keys:', Array.from(formData.keys()));
-    
-    // Don't set Content-Type header - let browser set it with boundary for multipart/form-data
-    // Angular HttpClient will automatically handle this for FormData
-    return this.http.put<any>(url, formData).pipe(
-      map(response => ({
-        ...response,
-        name: response.fullName || response.name || 'Unknown',
-        bio: response.bio || '',
-        isActive: response.isActive ?? true,
-        lastLogin: response.lastLogin || new Date().toISOString(),
-        createdAt: response.createdAt || new Date().toISOString(),
-        applicantSkills: response.applicantSkills || [],
-        address: response.address || '',
-        cvId: response.cvId
-      }))
-    );
-  }
 }

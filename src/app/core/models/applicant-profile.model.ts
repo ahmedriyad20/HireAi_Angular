@@ -27,20 +27,13 @@ export interface ApplicantProfile {
 
 export interface UpdateApplicantProfileRequest {
   id: number;
-  fullName: string;
-  email: string;
+  fullName?: string;
+  email?: string;
   address?: string;
   dateOfBirth: string;
-  role: string;
-  isPremium: boolean;
-  phone: string;
-  bio: string;
-  title: string;
-  isActive: boolean;
-  lastLogin: string;
-  createdAt: string;
-  resumeUrl: string;
-  skillLevel: string;
-  cvId?: number;
-  applicantSkills: ApplicantSkill[];
+  phone?: string;
+  bio?: string;
+  title?: string;
+  skillLevel?: string;
+  resumeUrl?: string;
 }
